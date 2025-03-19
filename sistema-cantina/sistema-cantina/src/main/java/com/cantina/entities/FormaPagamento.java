@@ -14,7 +14,6 @@ public class FormaPagamento {
     @OneToMany(mappedBy = "formaPagamento")
     private List<NotaFiscal> notasFiscais;
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }

@@ -16,7 +16,6 @@ public class Produto {
     @OneToMany(mappedBy = "produto")
     private List<ItemNotaFiscal> itensNotaFiscal;
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }

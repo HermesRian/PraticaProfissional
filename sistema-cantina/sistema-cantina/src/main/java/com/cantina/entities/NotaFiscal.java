@@ -28,7 +28,6 @@ public class NotaFiscal {
     @OneToMany(mappedBy = "notaFiscal")
     private List<ItemNotaFiscal> itensNotaFiscal;
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }

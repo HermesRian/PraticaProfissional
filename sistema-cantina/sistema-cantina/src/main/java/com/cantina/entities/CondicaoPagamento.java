@@ -14,7 +14,6 @@ public class CondicaoPagamento {
     @OneToMany(mappedBy = "condicaoPagamento")
     private List<NotaFiscal> notasFiscais;
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }

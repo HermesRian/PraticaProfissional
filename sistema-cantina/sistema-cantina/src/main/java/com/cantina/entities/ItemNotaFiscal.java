@@ -19,7 +19,6 @@ public class ItemNotaFiscal {
     @JoinColumn(name = "produto_id")
     private Produto produto;
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }
