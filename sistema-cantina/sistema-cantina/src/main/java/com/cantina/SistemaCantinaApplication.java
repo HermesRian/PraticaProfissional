@@ -1,4 +1,4 @@
-package com.cantina.sistemacantina;
+package com.cantina;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
