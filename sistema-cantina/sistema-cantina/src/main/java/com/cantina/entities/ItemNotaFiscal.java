@@ -2,6 +2,8 @@ package com.cantina.entities;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+
 @Entity
 public class ItemNotaFiscal {
     @Id
@@ -35,11 +37,11 @@ public class ItemNotaFiscal {
         this.quantidade = quantidade;
     }
 
-    public Double getPrecoUnitario() {
+    public double getPrecoUnitario() {
         return precoUnitario;
     }
 
-    public void setPrecoUnitario(Double precoUnitario) {
+    public void setPrecoUnitario(BigDecimal precoUnitario) {
         this.precoUnitario = precoUnitario;
     }
 

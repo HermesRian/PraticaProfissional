@@ -1,37 +1,34 @@
 package com.cantina.services;
 
+import com.cantina.database.CondicaoPagamentoDAO;
 import com.cantina.entities.CondicaoPagamento;
-import com.cantina.repositories.CondicaoPagamentoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CondicaoPagamentoServiceImpl implements CondicaoPagamentoService {
 
-    @Autowired
-    private CondicaoPagamentoRepository condicaoPagamentoRepository;
+    private final CondicaoPagamentoDAO condicaoPagamentoDAO = new CondicaoPagamentoDAO();
 
     @Override
     public List<CondicaoPagamento> listarTodos() {
-        return condicaoPagamentoRepository.findAll();
+        return condicaoPagamentoDAO.listarTodos();
     }
 
     @Override
     public CondicaoPagamento salvar(CondicaoPagamento condicaoPagamento) {
-        return condicaoPagamentoRepository.save(condicaoPagamento);
+        condicaoPagamentoDAO.salvar(condicaoPagamento);
+        return condicaoPagamento;
     }
 
     @Override
     public CondicaoPagamento buscarPorId(Long id) {
-        Optional<CondicaoPagamento> condicaoPagamento = condicaoPagamentoRepository.findById(id);
-        return condicaoPagamento.orElseThrow(() -> new RuntimeException("Condição de Pagamento não encontrada"));
+        return condicaoPagamentoDAO.buscarPorId(id);
     }
 
     @Override
     public void excluir(Long id) {
-        condicaoPagamentoRepository.deleteById(id);
+        condicaoPagamentoDAO.excluir(id);
     }
 }

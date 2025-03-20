@@ -1,37 +1,34 @@
 package com.cantina.services;
 
+import com.cantina.database.ProdutoDAO;
 import com.cantina.entities.Produto;
-import com.cantina.repositories.ProdutoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProdutoServiceImpl implements ProdutoService {
 
-    @Autowired
-    private ProdutoRepository produtoRepository;
+    private final ProdutoDAO produtoDAO = new ProdutoDAO();
 
     @Override
     public List<Produto> listarTodos() {
-        return produtoRepository.findAll();
+        return produtoDAO.listarTodos();
     }
 
     @Override
     public Produto salvar(Produto produto) {
-        return produtoRepository.save(produto);
+        produtoDAO.salvar(produto);
+        return produto;
     }
 
     @Override
     public Produto buscarPorId(Long id) {
-        Optional<Produto> produto = produtoRepository.findById(id);
-        return produto.orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+        return produtoDAO.buscarPorId(id);
     }
 
     @Override
     public void excluir(Long id) {
-        produtoRepository.deleteById(id);
+        produtoDAO.excluir(id);
     }
 }
