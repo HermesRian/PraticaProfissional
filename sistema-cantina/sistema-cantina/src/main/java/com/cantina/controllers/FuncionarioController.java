@@ -33,4 +33,9 @@ public class FuncionarioController {
     public void excluir(@PathVariable Long id) {
         funcionarioService.excluir(id);
     }
+
+    @PutMapping("/{id}")
+    public Funcionario atualizar(@PathVariable Long id, @RequestBody Funcionario funcionario) {
+        return funcionarioService.atualizar(id, funcionario);
+    }
 }

@@ -1,22 +1,15 @@
 package com.cantina.entities;
 
-import jakarta.persistence.*;
-
 import java.math.BigDecimal;
-import java.util.List;
 
-@Entity
 public class Produto {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String nome;
-    private Double preco;
-    private Integer quantidadeEstoque;
-
-    @OneToMany(mappedBy = "produto")
-    private List<ItemNotaFiscal> itensNotaFiscal;
+    private BigDecimal preco;
+    private int quantidadeEstoque;
+    private String descricao;
+    private String codigo;
+    private Boolean ativo;
 
     public Long getId() {
         return id;
@@ -42,19 +35,35 @@ public class Produto {
         this.preco = preco;
     }
 
-    public Integer getQuantidadeEstoque() {
+    public int getQuantidadeEstoque() {
         return quantidadeEstoque;
     }
 
-    public void setQuantidadeEstoque(Integer quantidadeEstoque) {
+    public void setQuantidadeEstoque(int quantidadeEstoque) {
         this.quantidadeEstoque = quantidadeEstoque;
     }
 
-    public List<ItemNotaFiscal> getItensNotaFiscal() {
-        return itensNotaFiscal;
+    public String getDescricao() {
+        return descricao;
     }
 
-    public void setItensNotaFiscal(List<ItemNotaFiscal> itensNotaFiscal) {
-        this.itensNotaFiscal = itensNotaFiscal;
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public String getCodigo() {
+        return codigo;
+    }
+
+    public void setCodigo(String codigo) {
+        this.codigo = codigo;
+    }
+
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
     }
 }

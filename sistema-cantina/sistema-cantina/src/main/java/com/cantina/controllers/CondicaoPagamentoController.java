@@ -3,7 +3,6 @@ package com.cantina.controllers;
 import com.cantina.entities.CondicaoPagamento;
 import com.cantina.services.CondicaoPagamentoService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,26 +15,27 @@ public class CondicaoPagamentoController {
     private CondicaoPagamentoService condicaoPagamentoService;
 
     @GetMapping
-    public ResponseEntity<List<CondicaoPagamento>> listarTodos() {
-        List<CondicaoPagamento> condicoesPagamento = condicaoPagamentoService.listarTodos();
-        return ResponseEntity.ok(condicoesPagamento);
+    public List<CondicaoPagamento> listarTodos() {
+        return condicaoPagamentoService.listarTodos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CondicaoPagamento> buscarPorId(@PathVariable Long id) {
-        CondicaoPagamento condicaoPagamento = condicaoPagamentoService.buscarPorId(id);
-        return ResponseEntity.ok(condicaoPagamento);
+    public CondicaoPagamento buscarPorId(@PathVariable Long id) {
+        return condicaoPagamentoService.buscarPorId(id);
     }
 
     @PostMapping
-    public ResponseEntity<CondicaoPagamento> salvar(@RequestBody CondicaoPagamento condicaoPagamento) {
-        CondicaoPagamento novaCondicaoPagamento = condicaoPagamentoService.salvar(condicaoPagamento);
-        return ResponseEntity.ok(novaCondicaoPagamento);
+    public CondicaoPagamento salvar(@RequestBody CondicaoPagamento condicaoPagamento) {
+        return condicaoPagamentoService.salvar(condicaoPagamento);
+    }
+
+    @PutMapping("/{id}")
+    public CondicaoPagamento atualizar(@PathVariable Long id, @RequestBody CondicaoPagamento condicaoPagamento) {
+        return condicaoPagamentoService.atualizar(id, condicaoPagamento);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+    public void excluir(@PathVariable Long id) {
         condicaoPagamentoService.excluir(id);
-        return ResponseEntity.noContent().build();
     }
 }

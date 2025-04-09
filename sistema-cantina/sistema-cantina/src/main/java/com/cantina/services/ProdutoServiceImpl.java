@@ -31,4 +31,15 @@ public class ProdutoServiceImpl implements ProdutoService {
     public void excluir(Long id) {
         produtoDAO.excluir(id);
     }
+
+    @Override
+    public Produto atualizar(Long id, Produto produto) {
+        Produto produtoExistente = produtoDAO.buscarPorId(id);
+        if (produtoExistente != null) {
+            produto.setId(id);
+            produtoDAO.atualizar(produto);
+            return produto;
+        }
+        return null;
+    }
 }

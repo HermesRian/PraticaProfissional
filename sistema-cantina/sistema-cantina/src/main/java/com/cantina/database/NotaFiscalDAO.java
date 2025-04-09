@@ -1,30 +1,35 @@
 package com.cantina.database;
 
-import com.cantina.entities.NotaFiscal;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import com.cantina.entities.*;
+import java.math.BigDecimal;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class NotaFiscalDAO {
 
     public void salvar(NotaFiscal notaFiscal) {
-        String sql = "INSERT INTO nota_fiscal (data_emissao, valor_total, fornecedor_id, forma_pagamento_id, condicao_pagamento_id) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO nota_fiscal (data_emissao, valor_total, condicao_pagamento_id, forma_pagamento_id, fornecedor_id, numero, serie, chave_acesso, cliente_id, transportadora_id, veiculo_id, modalidade_id, cancelada) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setDate(1, new java.sql.Date(notaFiscal.getDataEmissao().getTime()));
-            statement.setDouble(2, notaFiscal.getValorTotal());
-            statement.setLong(3, notaFiscal.getFornecedor().getId());
-            statement.setLong(4, notaFiscal.getFormaPagamento().getId());
-            statement.setLong(5, notaFiscal.getCondicaoPagamento().getId());
+            statement.setTimestamp(1, notaFiscal.getDataEmissao() != null ? new Timestamp(notaFiscal.getDataEmissao().getTime()) : null);
+            statement.setBigDecimal(2, notaFiscal.getValorTotal());
+            statement.setLong(3, notaFiscal.getCondicaoPagamento() != null ? notaFiscal.getCondicaoPagamento().getId() : null);
+            statement.setLong(4, notaFiscal.getFormaPagamento() != null ? notaFiscal.getFormaPagamento().getId() : null);
+            statement.setLong(5, notaFiscal.getFornecedor() != null ? notaFiscal.getFornecedor().getId() : null);
+            statement.setString(6, notaFiscal.getNumero());
+            statement.setString(7, notaFiscal.getSerie());
+            statement.setString(8, notaFiscal.getChaveAcesso());
+            statement.setLong(9, notaFiscal.getCliente() != null ? notaFiscal.getCliente().getId() : null);
+            statement.setLong(10, notaFiscal.getTransportadora() != null ? notaFiscal.getTransportadora().getId() : null);
+            statement.setLong(11, notaFiscal.getVeiculo() != null ? notaFiscal.getVeiculo().getId() : null);
+            statement.setLong(12, notaFiscal.getModalidade() != null ? notaFiscal.getModalidade().getId() : null);
+            statement.setBoolean(13, notaFiscal.getCancelada() != null ? notaFiscal.getCancelada() : false);
 
             statement.executeUpdate();
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -41,19 +46,13 @@ public class NotaFiscalDAO {
             while (resultSet.next()) {
                 NotaFiscal notaFiscal = new NotaFiscal();
                 notaFiscal.setId(resultSet.getLong("id"));
-                notaFiscal.setDataEmissao(resultSet.getDate("data_emissao"));
-                notaFiscal.setValorTotal(resultSet.getDouble("valor_total"));
-
-                // Carregar Fornecedor, FormaPagamento e CondicaoPagamento
-                FornecedorDAO fornecedorDAO = new FornecedorDAO();
-                notaFiscal.setFornecedor(fornecedorDAO.buscarPorId(resultSet.getLong("fornecedor_id")));
-
-                FormaPagamentoDAO formaPagamentoDAO = new FormaPagamentoDAO();
-                notaFiscal.setFormaPagamento(formaPagamentoDAO.buscarPorId(resultSet.getLong("forma_pagamento_id")));
-
-                CondicaoPagamentoDAO condicaoPagamentoDAO = new CondicaoPagamentoDAO();
-                notaFiscal.setCondicaoPagamento(condicaoPagamentoDAO.buscarPorId(resultSet.getLong("condicao_pagamento_id")));
-
+                notaFiscal.setDataEmissao(resultSet.getTimestamp("data_emissao"));
+                notaFiscal.setValorTotal(resultSet.getBigDecimal("valor_total"));
+                // Relacionamentos devem ser carregados conforme necessário
+                notaFiscal.setNumero(resultSet.getString("numero"));
+                notaFiscal.setSerie(resultSet.getString("serie"));
+                notaFiscal.setChaveAcesso(resultSet.getString("chave_acesso"));
+                notaFiscal.setCancelada(resultSet.getBoolean("cancelada"));
                 notasFiscais.add(notaFiscal);
             }
 
@@ -77,18 +76,13 @@ public class NotaFiscalDAO {
             if (resultSet.next()) {
                 notaFiscal = new NotaFiscal();
                 notaFiscal.setId(resultSet.getLong("id"));
-                notaFiscal.setDataEmissao(resultSet.getDate("data_emissao"));
-                notaFiscal.setValorTotal(resultSet.getDouble("valor_total"));
-
-                // Carregar Fornecedor, FormaPagamento e CondicaoPagamento
-                FornecedorDAO fornecedorDAO = new FornecedorDAO();
-                notaFiscal.setFornecedor(fornecedorDAO.buscarPorId(resultSet.getLong("fornecedor_id")));
-
-                FormaPagamentoDAO formaPagamentoDAO = new FormaPagamentoDAO();
-                notaFiscal.setFormaPagamento(formaPagamentoDAO.buscarPorId(resultSet.getLong("forma_pagamento_id")));
-
-                CondicaoPagamentoDAO condicaoPagamentoDAO = new CondicaoPagamentoDAO();
-                notaFiscal.setCondicaoPagamento(condicaoPagamentoDAO.buscarPorId(resultSet.getLong("condicao_pagamento_id")));
+                notaFiscal.setDataEmissao(resultSet.getTimestamp("data_emissao"));
+                notaFiscal.setValorTotal(resultSet.getBigDecimal("valor_total"));
+                // Relacionamentos devem ser carregados conforme necessário
+                notaFiscal.setNumero(resultSet.getString("numero"));
+                notaFiscal.setSerie(resultSet.getString("serie"));
+                notaFiscal.setChaveAcesso(resultSet.getString("chave_acesso"));
+                notaFiscal.setCancelada(resultSet.getBoolean("cancelada"));
             }
 
         } catch (SQLException e) {
@@ -96,6 +90,33 @@ public class NotaFiscalDAO {
         }
 
         return notaFiscal;
+    }
+
+    public void atualizar(NotaFiscal notaFiscal) {
+        String sql = "UPDATE nota_fiscal SET data_emissao = ?, valor_total = ?, condicao_pagamento_id = ?, forma_pagamento_id = ?, fornecedor_id = ?, numero = ?, serie = ?, chave_acesso = ?, cliente_id = ?, transportadora_id = ?, veiculo_id = ?, modalidade_id = ?, cancelada = ? WHERE id = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setTimestamp(1, notaFiscal.getDataEmissao() != null ? new Timestamp(notaFiscal.getDataEmissao().getTime()) : null);
+            statement.setBigDecimal(2, notaFiscal.getValorTotal());
+            statement.setLong(3, notaFiscal.getCondicaoPagamento() != null ? notaFiscal.getCondicaoPagamento().getId() : null);
+            statement.setLong(4, notaFiscal.getFormaPagamento() != null ? notaFiscal.getFormaPagamento().getId() : null);
+            statement.setLong(5, notaFiscal.getFornecedor() != null ? notaFiscal.getFornecedor().getId() : null);
+            statement.setString(6, notaFiscal.getNumero());
+            statement.setString(7, notaFiscal.getSerie());
+            statement.setString(8, notaFiscal.getChaveAcesso());
+            statement.setLong(9, notaFiscal.getCliente() != null ? notaFiscal.getCliente().getId() : null);
+            statement.setLong(10, notaFiscal.getTransportadora() != null ? notaFiscal.getTransportadora().getId() : null);
+            statement.setLong(11, notaFiscal.getVeiculo() != null ? notaFiscal.getVeiculo().getId() : null);
+            statement.setLong(12, notaFiscal.getModalidade() != null ? notaFiscal.getModalidade().getId() : null);
+            statement.setBoolean(13, notaFiscal.getCancelada() != null ? notaFiscal.getCancelada() : false);
+            statement.setLong(14, notaFiscal.getId());
+
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void excluir(Long id) {
@@ -106,7 +127,6 @@ public class NotaFiscalDAO {
 
             statement.setLong(1, id);
             statement.executeUpdate();
-
         } catch (SQLException e) {
             e.printStackTrace();
         }

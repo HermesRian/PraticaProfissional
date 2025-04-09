@@ -8,4 +8,5 @@ public interface FornecedorService {
     Fornecedor salvar(Fornecedor fornecedor);
     Fornecedor buscarPorId(Long id);
     void excluir(Long id);
+    void update(Fornecedor fornecedor);
 }

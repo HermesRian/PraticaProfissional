@@ -7,5 +7,6 @@ public interface FuncionarioService {
     List<Funcionario> listarTodos();
     Funcionario salvar(Funcionario funcionario);
     Funcionario buscarPorId(Long id);
+    Funcionario atualizar(Long id, Funcionario funcionario);
     void excluir(Long id);
 }

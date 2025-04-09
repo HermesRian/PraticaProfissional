@@ -3,7 +3,6 @@ package com.cantina.controllers;
 import com.cantina.entities.NotaFiscal;
 import com.cantina.services.NotaFiscalService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,26 +15,22 @@ public class NotaFiscalController {
     private NotaFiscalService notaFiscalService;
 
     @GetMapping
-    public ResponseEntity<List<NotaFiscal>> listarTodos() {
-        List<NotaFiscal> notasFiscais = notaFiscalService.listarTodos();
-        return ResponseEntity.ok(notasFiscais);
+    public List<NotaFiscal> listarTodos() {
+        return notaFiscalService.listarTodos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<NotaFiscal> buscarPorId(@PathVariable Long id) {
-        NotaFiscal notaFiscal = notaFiscalService.buscarPorId(id);
-        return ResponseEntity.ok(notaFiscal);
+    public NotaFiscal buscarPorId(@PathVariable Long id) {
+        return notaFiscalService.buscarPorId(id);
     }
 
     @PostMapping
-    public ResponseEntity<NotaFiscal> salvar(@RequestBody NotaFiscal notaFiscal) {
-        NotaFiscal novaNotaFiscal = notaFiscalService.salvar(notaFiscal);
-        return ResponseEntity.ok(novaNotaFiscal);
+    public NotaFiscal salvar(@RequestBody NotaFiscal notaFiscal) {
+        return notaFiscalService.salvar(notaFiscal);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+    public void excluir(@PathVariable Long id) {
         notaFiscalService.excluir(id);
-        return ResponseEntity.noContent().build();
     }
 }

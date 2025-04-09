@@ -1,7 +1,12 @@
 package com.cantina.repositories;
 
 import com.cantina.entities.Produto;
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
-public interface ProdutoRepository extends JpaRepository<Produto, Long> {
+public interface ProdutoRepository {
+    void save(Produto produto);
+    Produto findById(Long id);
+    List<Produto> findAll();
+    void update(Produto produto);
+    void delete(Long id);
 }

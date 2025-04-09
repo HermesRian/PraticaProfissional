@@ -1,7 +1,12 @@
 package com.cantina.repositories;
 
 import com.cantina.entities.FormaPagamento;
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
-public interface FormaPagamentoRepository extends JpaRepository<FormaPagamento, Long> {
+public interface FormaPagamentoRepository {
+    void save(FormaPagamento formaPagamento);
+    FormaPagamento findById(Long id);
+    List<FormaPagamento> findAll();
+    void update(FormaPagamento formaPagamento);
+    void delete(Long id);
 }

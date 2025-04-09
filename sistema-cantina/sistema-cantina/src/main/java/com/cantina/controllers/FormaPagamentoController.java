@@ -3,7 +3,6 @@ package com.cantina.controllers;
 import com.cantina.entities.FormaPagamento;
 import com.cantina.services.FormaPagamentoService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,26 +15,27 @@ public class FormaPagamentoController {
     private FormaPagamentoService formaPagamentoService;
 
     @GetMapping
-    public ResponseEntity<List<FormaPagamento>> listarTodos() {
-        List<FormaPagamento> formasPagamento = formaPagamentoService.listarTodos();
-        return ResponseEntity.ok(formasPagamento);
+    public List<FormaPagamento> listarTodos() {
+        return formaPagamentoService.listarTodos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FormaPagamento> buscarPorId(@PathVariable Long id) {
-        FormaPagamento formaPagamento = formaPagamentoService.buscarPorId(id);
-        return ResponseEntity.ok(formaPagamento);
+    public FormaPagamento buscarPorId(@PathVariable Long id) {
+        return formaPagamentoService.buscarPorId(id);
     }
 
     @PostMapping
-    public ResponseEntity<FormaPagamento> salvar(@RequestBody FormaPagamento formaPagamento) {
-        FormaPagamento novaFormaPagamento = formaPagamentoService.salvar(formaPagamento);
-        return ResponseEntity.ok(novaFormaPagamento);
+    public FormaPagamento salvar(@RequestBody FormaPagamento formaPagamento) {
+        return formaPagamentoService.salvar(formaPagamento);
+    }
+
+    @PutMapping("/{id}")
+    public FormaPagamento atualizar(@PathVariable Long id, @RequestBody FormaPagamento formaPagamento) {
+        return formaPagamentoService.atualizar(id, formaPagamento);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+    public void excluir(@PathVariable Long id) {
         formaPagamentoService.excluir(id);
-        return ResponseEntity.noContent().build();
     }
 }

@@ -1,24 +1,25 @@
 package com.cantina.entities;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 
-@Entity
+import java.math.BigDecimal;
+
 public class Funcionario {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String nome;
     private String cpf;
     private String cargo;
-    private String telefone;
+    private BigDecimal salario;
     private String email;
-    private String nivelAcesso; // Pode ser "admin", "operador", etc.
+    private String telefone;
+    private String endereco;
+    private String numero;
+    private String complemento;
+    private String bairro;
+    private String cep;
+    private Long cidadeId;
+    private Boolean ativo;
+    private java.util.Date dataAdmissao;
+    private java.util.Date dataDemissao;
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }
@@ -51,12 +52,12 @@ public class Funcionario {
         this.cargo = cargo;
     }
 
-    public String getTelefone() {
-        return telefone;
+    public BigDecimal getSalario() {
+        return salario;
     }
 
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
+    public void setSalario(BigDecimal salario) {
+        this.salario = salario;
     }
 
     public String getEmail() {
@@ -67,11 +68,83 @@ public class Funcionario {
         this.email = email;
     }
 
-    public String getNivelAcesso() {
-        return nivelAcesso;
+    public String getTelefone() {
+        return telefone;
     }
 
-    public void setNivelAcesso(String nivelAcesso) {
-        this.nivelAcesso = nivelAcesso;
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public void setEndereco(String endereco) {
+        this.endereco = endereco;
+    }
+
+    public String getNumero() {
+        return numero;
+    }
+
+    public void setNumero(String numero) {
+        this.numero = numero;
+    }
+
+    public String getComplemento() {
+        return complemento;
+    }
+
+    public void setComplemento(String complemento) {
+        this.complemento = complemento;
+    }
+
+    public String getBairro() {
+        return bairro;
+    }
+
+    public void setBairro(String bairro) {
+        this.bairro = bairro;
+    }
+
+    public String getCep() {
+        return cep;
+    }
+
+    public void setCep(String cep) {
+        this.cep = cep;
+    }
+
+    public Long getCidadeId() {
+        return cidadeId;
+    }
+
+    public void setCidadeId(Long cidadeId) {
+        this.cidadeId = cidadeId;
+    }
+
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
+    }
+
+    public java.util.Date getDataAdmissao() {
+        return dataAdmissao;
+    }
+
+    public void setDataAdmissao(java.util.Date dataAdmissao) {
+        this.dataAdmissao = dataAdmissao;
+    }
+
+    public java.util.Date getDataDemissao() {
+        return dataDemissao;
+    }
+
+    public void setDataDemissao(java.util.Date dataDemissao) {
+        this.dataDemissao = dataDemissao;
     }
 }

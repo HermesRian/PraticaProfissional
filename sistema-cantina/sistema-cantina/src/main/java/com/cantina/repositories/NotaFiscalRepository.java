@@ -1,7 +1,12 @@
 package com.cantina.repositories;
 
 import com.cantina.entities.NotaFiscal;
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
-public interface NotaFiscalRepository extends JpaRepository<NotaFiscal, Long> {
+public interface NotaFiscalRepository {
+    void save(NotaFiscal notaFiscal);
+    NotaFiscal findById(Long id);
+    List<NotaFiscal> findAll();
+    void update(NotaFiscal notaFiscal);
+    void delete(Long id);
 }

@@ -1,7 +1,12 @@
 package com.cantina.repositories;
 
 import com.cantina.entities.CondicaoPagamento;
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
-public interface CondicaoPagamentoRepository extends JpaRepository<CondicaoPagamento, Long> {
+public interface CondicaoPagamentoRepository {
+    void save(CondicaoPagamento condicaoPagamento);
+    CondicaoPagamento findById(Long id);
+    List<CondicaoPagamento> findAll();
+    void update(CondicaoPagamento condicaoPagamento);
+    void delete(Long id);
 }

@@ -5,25 +5,25 @@ import com.cantina.entities.NotaFiscal;
 import com.cantina.entities.Produto;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ItemNotaFiscalDAO {
 
     public void salvar(ItemNotaFiscal item) {
-        String sql = "INSERT INTO item_nota_fiscal (quantidade, preco_unitario, produto_id, nota_fiscal_id) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO item_nota_fiscal (quantidade, nota_fiscal_id, produto_id, descricao, valor, valor_unitario, valor_total) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, item.getQuantidade());
-            statement.setDouble(2, item.getPrecoUnitario());
+            statement.setLong(2, item.getNotaFiscal().getId());
             statement.setLong(3, item.getProduto().getId());
-            statement.setLong(4, item.getNotaFiscal().getId());
+            statement.setString(4, item.getDescricao());
+            statement.setBigDecimal(5, item.getValor());
+            statement.setBigDecimal(6, item.getValorUnitario());
+            statement.setBigDecimal(7, item.getValorTotal());
 
             statement.executeUpdate();
 
@@ -44,7 +44,10 @@ public class ItemNotaFiscalDAO {
                 ItemNotaFiscal item = new ItemNotaFiscal();
                 item.setId(resultSet.getLong("id"));
                 item.setQuantidade(resultSet.getInt("quantidade"));
-                item.setPrecoUnitario(BigDecimal.valueOf(resultSet.getDouble("preco_unitario")));
+                item.setDescricao(resultSet.getString("descricao"));
+                item.setValor(resultSet.getBigDecimal("valor"));
+                item.setValorUnitario(resultSet.getBigDecimal("valor_unitario"));
+                item.setValorTotal(resultSet.getBigDecimal("valor_total"));
 
                 // Carregar Produto
                 ProdutoDAO produtoDAO = new ProdutoDAO();
@@ -78,7 +81,10 @@ public class ItemNotaFiscalDAO {
                 item = new ItemNotaFiscal();
                 item.setId(resultSet.getLong("id"));
                 item.setQuantidade(resultSet.getInt("quantidade"));
-                item.setPrecoUnitario(BigDecimal.valueOf(resultSet.getDouble("preco_unitario")));
+                item.setDescricao(resultSet.getString("descricao"));
+                item.setValor(resultSet.getBigDecimal("valor"));
+                item.setValorUnitario(resultSet.getBigDecimal("valor_unitario"));
+                item.setValorTotal(resultSet.getBigDecimal("valor_total"));
 
                 // Carregar Produto
                 ProdutoDAO produtoDAO = new ProdutoDAO();
@@ -94,6 +100,28 @@ public class ItemNotaFiscalDAO {
         }
 
         return item;
+    }
+
+    public void atualizar(ItemNotaFiscal item) {
+        String sql = "UPDATE item_nota_fiscal SET quantidade = ?, nota_fiscal_id = ?, produto_id = ?, descricao = ?, valor = ?, valor_unitario = ?, valor_total = ? WHERE id = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, item.getQuantidade());
+            statement.setLong(2, item.getNotaFiscal().getId());
+            statement.setLong(3, item.getProduto().getId());
+            statement.setString(4, item.getDescricao());
+            statement.setBigDecimal(5, item.getValor());
+            statement.setBigDecimal(6, item.getValorUnitario());
+            statement.setBigDecimal(7, item.getValorTotal());
+            statement.setLong(8, item.getId());
+
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void excluir(Long id) {

@@ -1,26 +1,18 @@
 package com.cantina.entities;
 
-import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 
-@Entity
 public class ItemNotaFiscal {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private Integer quantidade;
-    private Double precoUnitario;
-
-    @ManyToOne
-    @JoinColumn(name = "nota_fiscal_id")
+    private int quantidade;
     private NotaFiscal notaFiscal;
-
-    @ManyToOne
-    @JoinColumn(name = "produto_id")
     private Produto produto;
+    private String descricao;
+    private BigDecimal valor;
+    private BigDecimal valorUnitario;
+    private BigDecimal valorTotal;
 
+    // Getters e Setters
     public Long getId() {
         return id;
     }
@@ -29,20 +21,12 @@ public class ItemNotaFiscal {
         this.id = id;
     }
 
-    public Integer getQuantidade() {
+    public int getQuantidade() {
         return quantidade;
     }
 
-    public void setQuantidade(Integer quantidade) {
+    public void setQuantidade(int quantidade) {
         this.quantidade = quantidade;
-    }
-
-    public double getPrecoUnitario() {
-        return precoUnitario;
-    }
-
-    public void setPrecoUnitario(BigDecimal precoUnitario) {
-        this.precoUnitario = precoUnitario;
     }
 
     public NotaFiscal getNotaFiscal() {
@@ -59,5 +43,37 @@ public class ItemNotaFiscal {
 
     public void setProduto(Produto produto) {
         this.produto = produto;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public BigDecimal getValor() {
+        return valor;
+    }
+
+    public void setValor(BigDecimal valor) {
+        this.valor = valor;
+    }
+
+    public BigDecimal getValorUnitario() {
+        return valorUnitario;
+    }
+
+    public void setValorUnitario(BigDecimal valorUnitario) {
+        this.valorUnitario = valorUnitario;
+    }
+
+    public BigDecimal getValorTotal() {
+        return valorTotal;
+    }
+
+    public void setValorTotal(BigDecimal valorTotal) {
+        this.valorTotal = valorTotal;
     }
 }

@@ -31,4 +31,15 @@ public class ClienteServiceImpl implements ClienteService {
     public void excluir(Long id) {
         clienteDAO.excluir(id);
     }
+
+    @Override
+    public Cliente atualizar(Long id, Cliente cliente) {
+        Cliente clienteExistente = clienteDAO.buscarPorId(id);
+        if (clienteExistente != null) {
+            cliente.setId(id);
+            clienteDAO.atualizar(cliente);
+            return cliente;
+        }
+        return null;
+    }
 }

@@ -33,4 +33,9 @@ public class ClienteController {
     public void excluir(@PathVariable Long id) {
         clienteService.excluir(id);
     }
+
+    @PutMapping("/{id}")
+    public Cliente atualizar(@PathVariable Long id, @RequestBody Cliente cliente) {
+        return clienteService.atualizar(id, cliente);
+    }
 }
