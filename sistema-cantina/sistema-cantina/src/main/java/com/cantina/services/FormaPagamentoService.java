@@ -7,5 +7,6 @@ public interface FormaPagamentoService {
     List<FormaPagamento> listarTodos();
     FormaPagamento salvar(FormaPagamento formaPagamento);
     FormaPagamento buscarPorId(Long id);
+    FormaPagamento atualizar(Long id, FormaPagamento formaPagamento);
     void excluir(Long id);
 }

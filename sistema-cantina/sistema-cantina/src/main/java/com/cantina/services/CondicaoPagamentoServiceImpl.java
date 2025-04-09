@@ -13,6 +13,7 @@ public class CondicaoPagamentoServiceImpl implements CondicaoPagamentoService {
 
     @Override
     public List<CondicaoPagamento> listarTodos() {
+
         return condicaoPagamentoDAO.listarTodos();
     }
 
@@ -24,11 +25,24 @@ public class CondicaoPagamentoServiceImpl implements CondicaoPagamentoService {
 
     @Override
     public CondicaoPagamento buscarPorId(Long id) {
+
         return condicaoPagamentoDAO.buscarPorId(id);
     }
 
     @Override
+    public CondicaoPagamento atualizar(Long id, CondicaoPagamento condicaoPagamento) {
+        CondicaoPagamento condicaoPagamentoExistente = condicaoPagamentoDAO.buscarPorId(id);
+        if (condicaoPagamentoExistente != null) {
+            condicaoPagamento.setId(id);
+            condicaoPagamentoDAO.atualizar(condicaoPagamento);
+            return condicaoPagamento;
+        }
+        return null;
+    }
+
+    @Override
     public void excluir(Long id) {
+
         condicaoPagamentoDAO.excluir(id);
     }
 }

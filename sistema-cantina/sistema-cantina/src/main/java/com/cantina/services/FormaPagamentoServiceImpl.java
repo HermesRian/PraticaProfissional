@@ -13,6 +13,7 @@ public class FormaPagamentoServiceImpl implements FormaPagamentoService {
 
     @Override
     public List<FormaPagamento> listarTodos() {
+
         return formaPagamentoDAO.listarTodos();
     }
 
@@ -24,11 +25,23 @@ public class FormaPagamentoServiceImpl implements FormaPagamentoService {
 
     @Override
     public FormaPagamento buscarPorId(Long id) {
+
         return formaPagamentoDAO.buscarPorId(id);
     }
 
     @Override
+    public FormaPagamento atualizar(Long id, FormaPagamento formaPagamento) {
+        FormaPagamento formaPagamentoExistente = formaPagamentoDAO.buscarPorId(id);
+        if (formaPagamentoExistente != null) {
+            formaPagamentoExistente.setId(formaPagamento.getId());
+            formaPagamentoDAO.atualizar(formaPagamentoExistente);
+        }
+        return formaPagamentoExistente;
+    }
+
+    @Override
     public void excluir(Long id) {
+
         formaPagamentoDAO.excluir(id);
     }
 }

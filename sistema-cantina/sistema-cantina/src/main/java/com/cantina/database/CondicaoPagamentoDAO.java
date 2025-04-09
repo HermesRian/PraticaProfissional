@@ -12,14 +12,15 @@ import java.util.List;
 public class CondicaoPagamentoDAO {
 
     public void salvar(CondicaoPagamento condicaoPagamento) {
-        String sql = "INSERT INTO condicao_pagamento (descricao, numeroParcelas, intervaloDias) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO condicao_pagamento (descricao, dias, parcelas, ativo) VALUES (?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, condicaoPagamento.getDescricao());
-//            statement.setInt(2, condicaoPagamento.getNumeroParcelas());
-//            statement.setInt(3, condicaoPagamento.getIntervaloDias());
+            statement.setInt(2, condicaoPagamento.getDias());
+            statement.setInt(3, condicaoPagamento.getParcelas());
+            statement.setBoolean(4, condicaoPagamento.getAtivo());
 
             statement.executeUpdate();
 
@@ -40,8 +41,9 @@ public class CondicaoPagamentoDAO {
                 CondicaoPagamento condicao = new CondicaoPagamento();
                 condicao.setId(resultSet.getLong("id"));
                 condicao.setDescricao(resultSet.getString("descricao"));
-//                condicao.setNumeroParcelas(resultSet.getInt("numeroParcelas"));
-//                condicao.setIntervaloDias(resultSet.getInt("intervaloDias"));
+                condicao.setDias(resultSet.getInt("dias"));
+                condicao.setParcelas(resultSet.getInt("parcelas"));
+                condicao.setAtivo(resultSet.getBoolean("ativo"));
 
                 condicoes.add(condicao);
             }
@@ -67,8 +69,9 @@ public class CondicaoPagamentoDAO {
                 condicao = new CondicaoPagamento();
                 condicao.setId(resultSet.getLong("id"));
                 condicao.setDescricao(resultSet.getString("descricao"));
-//                condicao.setNumeroParcelas(resultSet.getInt("numeroParcelas"));
-//                condicao.setIntervaloDias(resultSet.getInt("intervaloDias"));
+                condicao.setDias(resultSet.getInt("dias"));
+                condicao.setParcelas(resultSet.getInt("parcelas"));
+                condicao.setAtivo(resultSet.getBoolean("ativo"));
             }
 
         } catch (SQLException e) {
@@ -76,6 +79,25 @@ public class CondicaoPagamentoDAO {
         }
 
         return condicao;
+    }
+
+    public void atualizar(CondicaoPagamento condicaoPagamento) {
+        String sql = "UPDATE condicao_pagamento SET descricao = ?, dias = ?, parcelas = ?, ativo = ? WHERE id = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, condicaoPagamento.getDescricao());
+            statement.setInt(2, condicaoPagamento.getDias());
+            statement.setInt(3, condicaoPagamento.getParcelas());
+            statement.setBoolean(4, condicaoPagamento.getAtivo());
+            statement.setLong(5, condicaoPagamento.getId());
+
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void excluir(Long id) {

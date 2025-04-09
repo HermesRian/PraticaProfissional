@@ -13,6 +13,7 @@ public class ItemNotaFiscalServiceImpl implements ItemNotaFiscalService {
 
     @Override
     public List<ItemNotaFiscal> listarTodos() {
+
         return itemNotaFiscalDAO.listarTodos();
     }
 
@@ -28,7 +29,20 @@ public class ItemNotaFiscalServiceImpl implements ItemNotaFiscalService {
     }
 
     @Override
+    public ItemNotaFiscal atualizar(Long id, ItemNotaFiscal itemNotaFiscal) {
+        ItemNotaFiscal itemExistente = itemNotaFiscalDAO.buscarPorId(id);
+        if (itemExistente == null) {
+            throw new IllegalArgumentException("Item Nota Fiscal com o ID " + id + " não encontrado.");
+        }
+        itemNotaFiscal.setId(id);
+        itemNotaFiscalDAO.atualizar(itemNotaFiscal);
+        return itemNotaFiscal;
+    }
+
+
+    @Override
     public void excluir(Long id) {
+
         itemNotaFiscalDAO.excluir(id);
     }
 }
