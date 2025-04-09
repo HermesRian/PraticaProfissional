@@ -13,6 +13,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public List<Cliente> listarTodos() {
+
         return clienteDAO.listarTodos();
     }
 
@@ -24,11 +25,13 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public Cliente buscarPorId(Long id) {
+
         return clienteDAO.buscarPorId(id);
     }
 
     @Override
     public void excluir(Long id) {
+
         clienteDAO.excluir(id);
     }
 

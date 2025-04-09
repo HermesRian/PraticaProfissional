@@ -16,21 +16,25 @@ public class ClienteController {
 
     @GetMapping
     public List<Cliente> listarTodos() {
+
         return clienteService.listarTodos();
     }
 
     @GetMapping("/{id}")
     public Cliente buscarPorId(@PathVariable Long id) {
+
         return clienteService.buscarPorId(id);
     }
 
     @PostMapping
     public Cliente salvar(@RequestBody Cliente cliente) {
+
         return clienteService.salvar(cliente);
     }
 
     @DeleteMapping("/{id}")
     public void excluir(@PathVariable Long id) {
+
         clienteService.excluir(id);
     }
 
