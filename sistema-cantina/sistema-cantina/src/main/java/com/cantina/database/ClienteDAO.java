@@ -9,23 +9,23 @@ import java.util.List;
 public class ClienteDAO {
 
     public void salvar(Cliente cliente) {
-        String sql = "INSERT INTO cliente (nome, cnpjCpf, endereco, numero, complemento, bairro, cep, cidade_id, telefone, email, ativo) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO cliente (nome, cnpjCpf, endereco, numero, complemento, bairro, cep, cidade_id, telefone, email, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, cliente.getNome());
             statement.setString(2, cliente.getCnpjCpf());
-            statement.setString(4, cliente.getEndereco());
-            statement.setString(5, cliente.getNumero());
-            statement.setString(6, cliente.getComplemento());
-            statement.setString(7, cliente.getBairro());
-            statement.setString(8, cliente.getCep());
-            statement.setLong(9, cliente.getCidadeId());
-            statement.setString(10, cliente.getTelefone());
-            statement.setString(11, cliente.getEmail());
-            statement.setBoolean(12, cliente.getAtivo());
+            statement.setString(3, cliente.getEndereco());
+            statement.setString(4, cliente.getNumero());
+            statement.setString(5, cliente.getComplemento());
+            statement.setString(6, cliente.getBairro());
+            statement.setString(7, cliente.getCep());
+            statement.setLong(8, cliente.getCidadeId());
+            statement.setString(9, cliente.getTelefone());
+            statement.setString(10, cliente.getEmail());
+            statement.setBoolean(11, cliente.getAtivo());
+
             statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -98,23 +98,24 @@ public class ClienteDAO {
     }
 
     public void atualizar(Cliente cliente) {
-        String sql = "UPDATE cliente SET nome = ?, cnpjCpf, endereco = ?, numero = ?, complemento = ?, bairro = ?, cep = ?, cidade_id = ?, telefone = ?, email = ?, ativo = ? WHERE id = ?";
+        String sql = "UPDATE cliente SET nome = ?, cnpjCpf = ?, endereco = ?, numero = ?, complemento = ?, bairro = ?, cep = ?, cidade_id = ?, telefone = ?, email = ?, ativo = ? WHERE id = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, cliente.getNome());
             statement.setString(2, cliente.getCnpjCpf());
-            statement.setString(4, cliente.getEndereco());
-            statement.setString(5, cliente.getNumero());
-            statement.setString(6, cliente.getComplemento());
-            statement.setString(7, cliente.getBairro());
-            statement.setString(8, cliente.getCep());
-            statement.setLong(9, cliente.getCidadeId());
-            statement.setString(10, cliente.getTelefone());
-            statement.setString(11, cliente.getEmail());
-            statement.setBoolean(12, cliente.getAtivo());
-            statement.setLong(13, cliente.getId());
+            statement.setString(3, cliente.getEndereco());
+            statement.setString(4, cliente.getNumero());
+            statement.setString(5, cliente.getComplemento());
+            statement.setString(6, cliente.getBairro());
+            statement.setString(7, cliente.getCep());
+            statement.setLong(8, cliente.getCidadeId());
+            statement.setString(9, cliente.getTelefone());
+            statement.setString(10, cliente.getEmail());
+            statement.setBoolean(11, cliente.getAtivo());
+            statement.setLong(12, cliente.getId());
+
             statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
