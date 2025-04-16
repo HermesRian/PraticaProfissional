@@ -12,8 +12,8 @@ import java.util.List;
 public class FornecedorDAO {
 
     public void salvar(Fornecedor fornecedor) {
-        String sql = "INSERT INTO fornecedor (razao_social, nome_fantasia, cnpj, email, telefone, endereco, numero, complemento, bairro, cep, cidade_id, ativo) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO fornecedor (razao_social, nome_fantasia, cnpj, email, telefone, endereco, numero, complemento, bairro, cep, cidade_id, inscricao_estadual, ativo) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -29,7 +29,7 @@ public class FornecedorDAO {
             statement.setString(9, fornecedor.getBairro());
             statement.setString(10, fornecedor.getCep());
             statement.setLong(11, fornecedor.getCidadeId());
-            statement.setBoolean(12, fornecedor.getAtivo());
+            statement.setString(12, fornecedor.getInscricaoEstadual());            statement.setBoolean(13, fornecedor.getAtivo());
             statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -58,6 +58,7 @@ public class FornecedorDAO {
                 fornecedor.setBairro(resultSet.getString("bairro"));
                 fornecedor.setCep(resultSet.getString("cep"));
                 fornecedor.setCidadeId(resultSet.getLong("cidade_id"));
+                fornecedor.setInscricaoEstadual(resultSet.getString("inscricao_estadual"));
                 fornecedor.setAtivo(resultSet.getBoolean("ativo"));
                 fornecedores.add(fornecedor);
             }
@@ -82,11 +83,19 @@ public class FornecedorDAO {
             if (resultSet.next()) {
                 fornecedor = new Fornecedor();
                 fornecedor.setId(resultSet.getLong("id"));
+                fornecedor.setRazaoSocial(resultSet.getString("razao_social"));
                 fornecedor.setNomeFantasia(resultSet.getString("nome_fantasia"));
                 fornecedor.setCnpj(resultSet.getString("cnpj"));
-                fornecedor.setEndereco(resultSet.getString("endereco"));
-                fornecedor.setTelefone(resultSet.getString("telefone"));
                 fornecedor.setEmail(resultSet.getString("email"));
+                fornecedor.setTelefone(resultSet.getString("telefone"));
+                fornecedor.setEndereco(resultSet.getString("endereco"));
+                fornecedor.setNumero(resultSet.getString("numero"));
+                fornecedor.setComplemento(resultSet.getString("complemento"));
+                fornecedor.setBairro(resultSet.getString("bairro"));
+                fornecedor.setCep(resultSet.getString("cep"));
+                fornecedor.setCidadeId(resultSet.getLong("cidade_id"));
+                fornecedor.setInscricaoEstadual(resultSet.getString("inscricao_estadual"));
+                fornecedor.setAtivo(resultSet.getBoolean("ativo"));
             }
 
         } catch (SQLException e) {
@@ -110,7 +119,7 @@ public class FornecedorDAO {
         }
     }
     public void update(Fornecedor fornecedor) {
-        String sql = "UPDATE fornecedor SET razao_social = ?, nome_fantasia = ?, cnpj = ?, email = ?, telefone = ?, endereco = ?, numero = ?, complemento = ?, bairro = ?, cep = ?, cidade_id = ?, ativo = ? WHERE id = ?";
+        String sql = "UPDATE fornecedor SET razao_social = ?, nome_fantasia = ?, cnpj = ?, email = ?, telefone = ?, endereco = ?, numero = ?, complemento = ?, bairro = ?, cep = ?, cidade_id = ?, inscricao_estadual = ?, ativo = ? WHERE id = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -126,8 +135,9 @@ public class FornecedorDAO {
             statement.setString(9, fornecedor.getBairro());
             statement.setString(10, fornecedor.getCep());
             statement.setLong(11, fornecedor.getCidadeId());
-            statement.setBoolean(12, fornecedor.getAtivo());
-            statement.setLong(13, fornecedor.getId());
+            statement.setString(12, fornecedor.getInscricaoEstadual());
+            statement.setBoolean(13, fornecedor.getAtivo());
+            statement.setLong(14, fornecedor.getId());
             statement.executeUpdate();
 
         } catch (SQLException e) {

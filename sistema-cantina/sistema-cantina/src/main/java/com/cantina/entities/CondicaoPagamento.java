@@ -1,6 +1,7 @@
 package com.cantina.entities;
 
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 public class CondicaoPagamento {
     private Long id;
@@ -8,7 +9,12 @@ public class CondicaoPagamento {
     private Integer dias;
     private Integer parcelas;
     private Boolean ativo;
-    private List<NotaFiscal> notasFiscais;
+    private Double jurosPercentual;
+    private Double multaPercentual;
+    private Double descontoPercentual;
+
+    @JsonManagedReference
+    private List<ParcelaCondicaoPagamento> parcelasCondicao;
 
     public Long getId() {
 
@@ -30,14 +36,6 @@ public class CondicaoPagamento {
         this.descricao = descricao;
     }
 
-    public List<NotaFiscal> getNotasFiscais() {
-
-        return notasFiscais;
-    }
-
-    public void setNotasFiscais(List<NotaFiscal> notasFiscais) {
-        this.notasFiscais = notasFiscais;
-    }
 
     public Integer getDias() {
 
@@ -62,5 +60,45 @@ public class CondicaoPagamento {
     public void setAtivo(Boolean ativo) {
 
         this.ativo = ativo;
+    }
+
+    public Double getJurosPercentual() {
+
+        return jurosPercentual;
+    }
+
+    public void setJurosPercentual(Double jurosPercentual) {
+
+        this.jurosPercentual = jurosPercentual;
+    }
+
+    public Double getMultaPercentual() {
+
+        return multaPercentual;
+    }
+
+    public void setMultaPercentual(Double multaPercentual) {
+
+        this.multaPercentual = multaPercentual;
+    }
+
+    public Double getDescontoPercentual() {
+
+        return descontoPercentual;
+    }
+
+    public void setDescontoPercentual(Double descontoPercentual) {
+
+        this.descontoPercentual = descontoPercentual;
+    }
+
+    public List<ParcelaCondicaoPagamento> getParcelasCondicao() {
+
+        return parcelasCondicao;
+    }
+
+    public void setParcelasCondicao(List<ParcelaCondicaoPagamento> parcelasCondicao) {
+
+        this.parcelasCondicao = parcelasCondicao;
     }
 }

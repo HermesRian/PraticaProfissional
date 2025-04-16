@@ -13,9 +13,9 @@ public class Fornecedor {
     private String bairro;
     private String cep;
     private Long cidadeId;
+    private String inscricaoEstadual;
     private Boolean ativo;
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }
@@ -110,6 +110,14 @@ public class Fornecedor {
 
     public void setCidadeId(Long cidadeId) {
         this.cidadeId = cidadeId;
+    }
+
+    public String getInscricaoEstadual() {
+        return inscricaoEstadual;
+    }
+
+    public void setInscricaoEstadual(String inscricaoEstadual) {
+        this.inscricaoEstadual = inscricaoEstadual;
     }
 
     public Boolean getAtivo() {

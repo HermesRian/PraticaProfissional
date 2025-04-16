@@ -16,11 +16,13 @@ public class CondicaoPagamentoController {
 
     @GetMapping
     public List<CondicaoPagamento> listarTodos() {
+
         return condicaoPagamentoService.listarTodos();
     }
 
     @GetMapping("/{id}")
     public CondicaoPagamento buscarPorId(@PathVariable Long id) {
+
         return condicaoPagamentoService.buscarPorId(id);
     }
 
@@ -36,6 +38,7 @@ public class CondicaoPagamentoController {
 
     @DeleteMapping("/{id}")
     public void excluir(@PathVariable Long id) {
+
         condicaoPagamentoService.excluir(id);
     }
 }

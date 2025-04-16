@@ -8,7 +8,7 @@ public class FormaPagamento {
     private String codigo;
     private String tipo;
     private Boolean ativo;
-    private List<NotaFiscal> notasFiscais;
+   // private List<NotaFiscal> notasFiscais;
 
     public Long getId() {
 
@@ -20,15 +20,15 @@ public class FormaPagamento {
         this.id = id;
     }
 
-    public List<NotaFiscal> getNotasFiscais() {
-
-        return notasFiscais;
-    }
-
-    public void setNotasFiscais(List<NotaFiscal> notasFiscais) {
-
-        this.notasFiscais = notasFiscais;
-    }
+//    public List<NotaFiscal> getNotasFiscais() {
+//
+//        return notasFiscais;
+//    }
+//
+//    public void setNotasFiscais(List<NotaFiscal> notasFiscais) {
+//
+//        this.notasFiscais = notasFiscais;
+//    }
     public String getDescricao() {
 
         return descricao;
