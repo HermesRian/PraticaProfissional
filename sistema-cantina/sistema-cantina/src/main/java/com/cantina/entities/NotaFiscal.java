@@ -7,7 +7,7 @@ import java.util.List;
 public class NotaFiscal {
     private Long id;
     private Date dataEmissao;
-    private BigDecimal valorTotal; // Alterado para BigDecimal
+    private BigDecimal valorTotal;
     private CondicaoPagamento condicaoPagamento;
     private FormaPagamento formaPagamento;
     private Fornecedor fornecedor;
@@ -21,7 +21,6 @@ public class NotaFiscal {
     private Boolean cancelada;
     private List<ItemNotaFiscal> itensNotaFiscal;
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }
