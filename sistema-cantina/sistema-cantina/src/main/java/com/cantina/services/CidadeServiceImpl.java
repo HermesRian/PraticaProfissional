@@ -40,7 +40,7 @@ public class CidadeServiceImpl implements CidadeService {
         cidadeExistente.setCodigoIbge(cidade.getCodigoIbge());
         cidadeExistente.setEstadoId(cidade.getEstadoId());
         cidadeDAO.atualizar(cidadeExistente);
-        return cidadeExistente; // Retorna a entidade atualizada
+        return cidadeExistente;
     }
 
     @Override
