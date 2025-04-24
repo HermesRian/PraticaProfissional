@@ -12,7 +12,6 @@ public class ItemNotaFiscal {
     private BigDecimal valorUnitario;
     private BigDecimal valorTotal;
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }
