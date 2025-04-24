@@ -19,7 +19,7 @@ public class PaisServiceImpl implements PaisService {
     }
 
     @Override
-    public Pais buscarPorId(Long id) { // Alterado para Long
+    public Pais buscarPorId(Long id) {
         return paisDAO.buscarPorId(id);
     }
 
