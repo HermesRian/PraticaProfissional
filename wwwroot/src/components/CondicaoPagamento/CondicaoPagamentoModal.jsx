@@ -1,12 +1,34 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  TextField,
+  InputAdornment,
+  Box,
+  Alert,
+  Chip
+} from '@mui/material';
+import {
+  Search as SearchIcon,
+  Close as CloseIcon
+} from '@mui/icons-material';
 
 const CondicaoPagamentoModal = ({ onClose, onCondicaoSelecionada }) => {
   const [condicoesPagamento, setCondicoesPagamento] = useState([]);
   const [filtro, setFiltro] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
+  const [error, setError] = useState(null);  useEffect(() => {
     fetch('http://localhost:8080/condicoes-pagamento')
       .then((response) => {
         if (!response.ok) {
@@ -27,134 +49,175 @@ const CondicaoPagamentoModal = ({ onClose, onCondicaoSelecionada }) => {
   const handleFiltroChange = (e) => {
     setFiltro(e.target.value.toLowerCase());
   };
-
-  const condicoesFiltradas = condicoesPagamento.filter((condicao) => 
-    condicao.descricao.toLowerCase().includes(filtro)
-  );
+  const condicoesFiltradas = condicoesPagamento.filter((condicao) => {
+    const numParcelas = condicao.parcelasCondicao?.length || condicao.parcelas?.length || 0;
+    return (
+      condicao.descricao.toLowerCase().includes(filtro) ||
+      condicao.dias?.toString().includes(filtro) ||
+      numParcelas.toString().includes(filtro)
+    );
+  });
 
   return (
-    <div 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 1000,
+    <Dialog
+      open={true}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: { backgroundColor: '#ffffff', borderRadius: 2 }
       }}
     >
-      <div 
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '20px',
-          width: '80%',
-          maxWidth: '700px',
-          maxHeight: '80vh',
-          overflowY: 'auto',
-          boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
-        }}
-      >
-        <h2 style={{ marginTop: 0, fontSize: '1.3rem' }}>Selecionar Condição de Pagamento</h2>
-        
-        <div style={{ marginBottom: '15px' }}>
-          <input
-            type="text"
-            placeholder="Filtrar por descrição..."
+      <DialogTitle sx={{ 
+        bgcolor: '#ffffff', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        pb: 2
+      }}>
+        <Typography variant="h6" fontWeight={600}>
+          Selecionar Condição de Pagamento
+        </Typography>
+        <IconButton onClick={onClose} size="small">
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent sx={{ p: 3 }}>
+        {/* Campo de pesquisa */}
+        <Box sx={{ mb: 3 }}>          <TextField
+            variant="outlined"
+            placeholder="Filtrar por descrição, dias ou número de parcelas..."
             value={filtro}
             onChange={handleFiltroChange}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
+            fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ 
+              '& .MuiOutlinedInput-root': {
+                height: 40,
+                '& fieldset': {
+                  borderColor: '#e0e0e0',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#1976d2',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#1976d2',
+                }
+              }
             }}
           />
-        </div>
+        </Box>
 
-        {loading ? (
-          <p>Carregando condições de pagamento...</p>
-        ) : error ? (
-          <p style={{ color: 'red' }}>{error}</p>
-        ) : (
-          <table 
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              fontSize: '0.9rem',
-            }}
-          >
-            <thead>
-              <tr style={{ backgroundColor: '#f8f9fa' }}>
-                <th style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'left' }}>Descrição</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>Dias</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>Parcelas</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>Ativo</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {condicoesFiltradas.length > 0 ? (
-                condicoesFiltradas.map((condicao) => (
-                  <tr key={condicao.id} style={{ borderBottom: '1px solid #ddd' }}>
-                    <td style={{ padding: '8px', border: '1px solid #ddd' }}>{condicao.descricao}</td>
-                    <td style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>{condicao.dias}</td>
-                    <td style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>
-                      {condicao.parcelas?.length || 0}
-                    </td>
-                    <td style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>
-                      {condicao.ativo ? 'Sim' : 'Não'}
-                    </td>
-                    <td style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>
-                      <button
-                        onClick={() => onCondicaoSelecionada(condicao)}
-                        style={{
-                          backgroundColor: '#007bff',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          padding: '5px 8px',
-                          cursor: 'pointer',
-                          fontSize: '0.85rem',
-                        }}
-                      >
-                        Selecionar
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" style={{ padding: '8px', textAlign: 'center' }}>
-                    Nenhuma condição de pagamento encontrada
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
         )}
 
-        <div style={{ marginTop: '15px', textAlign: 'right' }}>
-          <button
-            onClick={onClose}
-            style={{
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '8px 16px',
-              cursor: 'pointer',
-            }}
-          >
-            Fechar
-          </button>
-        </div>
-      </div>
-    </div>
+        {loading ? (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography>Carregando condições de pagamento...</Typography>
+          </Box>
+        ) : (
+          <TableContainer sx={{ maxHeight: 400 }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                  <TableCell sx={{ fontWeight: 600 }}>Descrição</TableCell>
+                  <TableCell sx={{ fontWeight: 600, textAlign: 'center' }}>Dias</TableCell>
+                  <TableCell sx={{ fontWeight: 600, textAlign: 'center' }}>Parcelas</TableCell>
+                  <TableCell sx={{ fontWeight: 600, textAlign: 'center' }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 600, textAlign: 'center' }}>Ação</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {condicoesFiltradas.length > 0 ? (
+                  condicoesFiltradas.map((condicao) => (
+                    <TableRow 
+                      key={condicao.id}
+                      hover
+                      sx={{ 
+                        '&:hover': { bgcolor: '#f8f9fa' },
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => onCondicaoSelecionada(condicao)}
+                    >
+                      <TableCell>
+                        <Typography variant="body2" fontWeight={500}>
+                          {condicao.descricao}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ textAlign: 'center' }}>
+                        <Typography variant="body2">
+                          {condicao.dias}
+                        </Typography>
+                      </TableCell>                      <TableCell sx={{ textAlign: 'center' }}>
+                        <Chip
+                          label={condicao.parcelasCondicao?.length || condicao.parcelas?.length || 0}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell sx={{ textAlign: 'center' }}>
+                        <Chip
+                          label={condicao.ativo ? 'Ativo' : 'Inativo'}
+                          size="small"
+                          color={condicao.ativo ? 'success' : 'default'}
+                          variant={condicao.ativo ? 'filled' : 'outlined'}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ textAlign: 'center' }}>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCondicaoSelecionada(condicao);
+                          }}
+                          sx={{ 
+                            bgcolor: '#1976d2',
+                            '&:hover': { bgcolor: '#1565c0' },
+                            minWidth: 80
+                          }}
+                        >
+                          Selecionar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
+                      <Typography variant="h6" color="text.secondary">
+                        Nenhuma condição de pagamento encontrada
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </DialogContent>
+
+      <DialogActions sx={{ p: 3, bgcolor: '#ffffff' }}>
+        <Button
+          onClick={onClose}
+          variant="outlined"
+          color="inherit"
+        >
+          Fechar
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

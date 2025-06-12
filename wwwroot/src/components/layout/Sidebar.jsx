@@ -1,3 +1,5 @@
+/*
+
 import React from 'react';
 import { Drawer, List, ListItem, ListItemText } from '@mui/material';
 import { Link } from 'react-router-dom';
@@ -54,10 +56,11 @@ const Sidebar = () => {
         <ListItem component={Link} to="/produtos" button>
           <ListItemText primary="Produtos" />
         </ListItem>
-    */ }
+    */  /* }
         </List>
     </Drawer>
   );
 };
 
-export default Sidebar;
+*/
+//export default Sidebar;

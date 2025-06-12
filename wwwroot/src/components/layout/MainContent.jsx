@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 import Dashboard from '../Dashboard/Dashboard';
 
-import ClienteList from '../Cliente/ClienteList';
+import ClienteList from '../Cliente/ClienteListMUI';
 import ClienteForm from '../Cliente/ClienteFormMUI';
 
 import FornecedorList from '../Fornecedor/FornecedorList';

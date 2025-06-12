@@ -67,9 +67,16 @@ public class ClienteDAO {
             statement.setString(22, cliente.getObservacao());
 
             statement.executeUpdate();
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             if (e.getMessage().toLowerCase().contains("unique") || e.getMessage().toLowerCase().contains("duplicate")) {
-                throw new DuplicateCnpjCpfException("Já existe um cliente cadastrado com este CNPJ/CPF.");
+                String campo = "CNPJ/CPF";
+                if (cliente.getTipo() != null && cliente.getTipo() == 0) {
+                    campo = "CPF";
+                } else if (cliente.getTipo() != null && cliente.getTipo() == 1) {
+                    campo = "CNPJ";
+                }
+                throw new DuplicateCnpjCpfException("Já existe um cliente cadastrado com este " + campo + ".");
             }
             throw new RuntimeException("Erro inesperado ao salvar o cliente.", e);
         }
@@ -205,9 +212,16 @@ public class ClienteDAO {
             statement.setLong(23, cliente.getId());
 
             statement.executeUpdate();
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             if (e.getMessage().toLowerCase().contains("unique") || e.getMessage().toLowerCase().contains("duplicate")) {
-                throw new DuplicateCnpjCpfException("Já existe um cliente cadastrado com este CNPJ/CPF.");
+                String campo = "CNPJ/CPF";
+                if (cliente.getTipo() != null && cliente.getTipo() == 0) {
+                    campo = "CPF";
+                } else if (cliente.getTipo() != null && cliente.getTipo() == 1) {
+                    campo = "CNPJ";
+                }
+                throw new DuplicateCnpjCpfException("Já existe um cliente cadastrado com este " + campo + ".");
             }
             throw new RuntimeException("Erro ao atualizar o cliente.", e);
         }
