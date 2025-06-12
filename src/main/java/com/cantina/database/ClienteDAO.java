@@ -175,7 +175,7 @@ public class ClienteDAO {
             if (cliente.getAtivo() != null) {
                 statement.setBoolean(11, cliente.getAtivo());
             } else {
-                statement.setBoolean(11, false); // Ou use setNull se preferir NULL no banco
+                statement.setBoolean(11, false);
             }
             statement.setString(12, cliente.getApelido());
             statement.setBigDecimal(13, cliente.getLimiteCredito() != null ? cliente.getLimiteCredito() : BigDecimal.ZERO);
