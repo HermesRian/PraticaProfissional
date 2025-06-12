@@ -58,6 +58,7 @@ public class ClienteServiceImpl implements ClienteService {
         clienteDAO.excluir(id);
     }
 
+
     @Override
     public Cliente atualizar(Long id, Cliente cliente) {
         Cliente clienteExistente = clienteDAO.buscarPorId(id);
