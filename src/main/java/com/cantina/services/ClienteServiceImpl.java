@@ -5,6 +5,7 @@ import com.cantina.database.ClienteDAO;
 import com.cantina.database.EstadoDAO;
 import com.cantina.database.PaisDAO;
 import com.cantina.entities.Cliente;
+import com.cantina.utils.DocumentoUtils;
 import org.springframework.stereotype.Service;
 import com.cantina.entities.Cidade;
 import com.cantina.entities.Estado;
@@ -35,13 +36,26 @@ public class ClienteServiceImpl implements ClienteService {
                     Pais pais = paisDAO.buscarPorId(Long.valueOf(estado.getPaisId()));
                     if (pais != null && "BRASIL".equalsIgnoreCase(pais.getNome())) {
                         if (cliente.getCnpjCpf() == null || cliente.getCnpjCpf().trim().isEmpty()) {
-                            throw new IllegalArgumentException("CNPJ/CPF é obrigatório para clientes brasileiros.");
+                            if (cliente.getTipo() != null && cliente.getTipo() == 0) {
+                                throw new IllegalArgumentException("CPF é obrigatório para clientes brasileiros.");
+                            } else if (cliente.getTipo() != null && cliente.getTipo() == 1) {
+                                throw new IllegalArgumentException("CNPJ é obrigatório para clientes brasileiros.");
+                            } else {
+                                throw new IllegalArgumentException("CNPJ/CPF é obrigatório para clientes brasileiros.");
+                            }
+                        }
+                        // Validação de CPF/CNPJ
+                        if (cliente.getTipo() != null && cliente.getCnpjCpf() != null) {
+                            if (cliente.getTipo() == 0 && !DocumentoUtils.isCpfValido(cliente.getCnpjCpf())) {
+                                throw new IllegalArgumentException("CPF inválido.");
+                            } else if (cliente.getTipo() == 1 && !DocumentoUtils.isCnpjValido(cliente.getCnpjCpf())) {
+                                throw new IllegalArgumentException("CNPJ inválido.");
+                            }
                         }
                     }
                 }
             }
         }
-
         clienteDAO.salvar(cliente);
         return cliente;
     }
@@ -58,6 +72,7 @@ public class ClienteServiceImpl implements ClienteService {
         clienteDAO.excluir(id);
     }
 
+
     @Override
     public Cliente atualizar(Long id, Cliente cliente) {
         Cliente clienteExistente = clienteDAO.buscarPorId(id);
@@ -72,7 +87,21 @@ public class ClienteServiceImpl implements ClienteService {
                         Pais pais = paisDAO.buscarPorId(Long.valueOf(estado.getPaisId()));
                         if (pais != null && "BRASIL".equalsIgnoreCase(pais.getNome())) {
                             if (cliente.getCnpjCpf() == null || cliente.getCnpjCpf().trim().isEmpty()) {
-                                throw new IllegalArgumentException("CNPJ/CPF é obrigatório para clientes brasileiros.");
+                                if (cliente.getTipo() != null && cliente.getTipo() == 0) {
+                                    throw new IllegalArgumentException("CPF é obrigatório para clientes brasileiros.");
+                                } else if (cliente.getTipo() != null && cliente.getTipo() == 1) {
+                                    throw new IllegalArgumentException("CNPJ é obrigatório para clientes brasileiros.");
+                                } else {
+                                    throw new IllegalArgumentException("CNPJ/CPF é obrigatório para clientes brasileiros.");
+                                }
+                            }
+                            // Validação de CPF/CNPJ
+                            if (cliente.getTipo() != null && cliente.getCnpjCpf() != null) {
+                                if (cliente.getTipo() == 0 && !DocumentoUtils.isCpfValido(cliente.getCnpjCpf())) {
+                                    throw new IllegalArgumentException("CPF inválido.");
+                                } else if (cliente.getTipo() == 1 && !DocumentoUtils.isCnpjValido(cliente.getCnpjCpf())) {
+                                    throw new IllegalArgumentException("CNPJ inválido.");
+                                }
                             }
                         }
                     }

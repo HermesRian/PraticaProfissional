@@ -79,9 +79,8 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
     nacionalidade: '',
     rgInscricaoEstadual: '',
     dataNascimento: '',
-    estadoCivil: '',
-    tipo: 'FISICA', // Padrão: pessoa física
-    sexo: 'M', // Padrão: masculino
+    estadoCivil: '',    tipo: 'FISICA', // Padrão: pessoa física
+    sexo: '', // Começa vazio para evitar pressuposições
     condicaoPagamentoId: '',
     condicaoPagamentoDescricao: '',
     observacao: '',
@@ -94,34 +93,84 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
   const [fieldErrors, setFieldErrors] = useState({});
   const [showRequiredErrors, setShowRequiredErrors] = useState(false);
   const navigate = useNavigate();
-  const { id } = useParams();
-  useEffect(() => {
+  const { id } = useParams();  useEffect(() => {
     if (id) {
       fetch(`http://localhost:8080/clientes/${id}`)
-        .then((response) => response.json())
-        .then((data) => {
+        .then((response) => response.json())        .then(async (data) => {
+          console.log('Dados recebidos do backend:', data); // Debug para ver os dados
+          console.log('cidadeId:', data.cidadeId, 'condicaoPagamentoId:', data.condicaoPagamentoId);
+          
           // Convertendo os valores numéricos recebidos do backend para strings
           const tipoFormatado = typeof data.tipo === 'number' 
             ? (data.tipo === 0 ? 'FISICA' : 'JURIDICA') 
             : (data.tipo || 'FISICA');
             
           const sexoFormatado = typeof data.sexo === 'number' 
-            ? (data.sexo === 0 ? 'M' : 'F') 
-            : (data.sexo || 'M');
+            ? (data.sexo === 0 ? 'M' : data.sexo === 1 ? 'F' : 'O') 
+            : (data.sexo || '');
+
+          // Buscar nome da cidade se cidadeId estiver presente
+          let cidadeNome = '';
+          if (data.cidadeId) {
+            try {
+              console.log('Buscando cidade com ID:', data.cidadeId);
+              const cidadeResponse = await fetch(`http://localhost:8080/cidades/${data.cidadeId}`);
+              if (cidadeResponse.ok) {
+                const cidadeData = await cidadeResponse.json();
+                cidadeNome = cidadeData.nome || '';
+                console.log('Dados da cidade:', cidadeData);
+                console.log('Nome da cidade encontrado:', cidadeNome);
+              } else {
+                console.error('Erro ao buscar cidade, status:', cidadeResponse.status);
+              }
+            } catch (error) {
+              console.error('Erro ao buscar cidade:', error);
+            }
+          }
+
+          // Buscar descrição da condição de pagamento se condicaoPagamentoId estiver presente
+          let condicaoPagamentoDescricao = '';
+          if (data.condicaoPagamentoId) {
+            try {
+              console.log('Buscando condição de pagamento com ID:', data.condicaoPagamentoId);
+              // Testar ambas as URLs possíveis
+              let condicaoResponse = await fetch(`http://localhost:8080/condicoes-pagamento/${data.condicaoPagamentoId}`);
+              
+              if (!condicaoResponse.ok) {
+                // Tentar URL alternativa se a primeira falhar
+                console.log('Tentando URL alternativa para condição de pagamento...');
+                condicaoResponse = await fetch(`http://localhost:8080/condicao-pagamento/${data.condicaoPagamentoId}`);
+              }
+              
+              if (condicaoResponse.ok) {
+                const condicaoData = await condicaoResponse.json();
+                condicaoPagamentoDescricao = condicaoData.descricao || '';
+                console.log('Dados da condição de pagamento:', condicaoData);
+                console.log('Descrição da condição encontrada:', condicaoPagamentoDescricao);
+              } else {
+                console.error('Erro ao buscar condição de pagamento, status:', condicaoResponse.status);
+              }
+            } catch (error) {
+              console.error('Erro ao buscar condição de pagamento:', error);
+            }
+          }
             
-          setCliente({
+          const clienteAtualizado = {
             ...data,
-            cidadeNome: data.cidadeNome || '',
-            condicaoPagamentoDescricao: data.condicaoPagamentoDescricao || '',
+            cidadeNome: cidadeNome,
+            condicaoPagamentoDescricao: condicaoPagamentoDescricao,
             tipo: tipoFormatado,
             sexo: sexoFormatado,
             dataCadastro: data.dataCadastro || '',
             ultimaModificacao: data.ultimaModificacao || '',
-          });
+          };
+          
+          console.log('Cliente final com dados buscados:', clienteAtualizado);
+          setCliente(clienteAtualizado);
         })
         .catch((error) => console.error('Erro ao buscar cliente:', error));
     }
-  }, [id]);  const handleChange = (e) => {
+  }, [id]);const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     
     // Limpa o erro do campo quando o usuário começar a digitar
@@ -132,8 +181,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
         return newErrors;
       });
     }
-    
-    // Ações especiais para diferentes campos
+      // Ações especiais para diferentes campos
     if (name === 'tipo') {
       // Limpa o CPF/CNPJ e RG/Inscrição Estadual quando muda o tipo de pessoa
       setCliente({ 
@@ -141,7 +189,8 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
         [name]: value,
         cnpjCpf: '', // Limpa o campo para aplicar a máscara correta
         rgInscricaoEstadual: '', // Limpa o campo de RG/IE também
-        sexo: value === 'FISICA' ? cliente.sexo || 'M' : '' // Ajusta o sexo conforme o tipo
+        sexo: value === 'FISICA' ? cliente.sexo || '' : '', // Mantém vazio quando muda para Física
+        estadoCivil: value === 'JURIDICA' ? '' : cliente.estadoCivil // Limpa estado civil para Pessoa Jurídica
       });
     } else {
       setCliente({ ...cliente, [name]: type === 'checkbox' ? checked : value });
@@ -260,7 +309,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
   const handleRgChange = (e) => {
     const { name } = e.target;
     let value = e.target.value;
-    const maxLength = cliente.tipo === 'FISICA' ? 9 : 15; // RG: 9 caracteres, IE: 15 caracteres
+    const maxLength = cliente.tipo === 'FISICA' ? 9 : 12; // RG: 9 caracteres, IE: 12 caracteres
     
     if (cliente.tipo === 'FISICA') {
       // Para RG: permite números e X apenas no final
@@ -293,8 +342,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
     // Limpa erros anteriores
     setFieldErrors({});
     setErrorMessage('');
-    
-    // Validação de campos obrigatórios
+      // Validação de campos obrigatórios
     const errors = {};
     
     if (!cliente.nome?.trim()) {
@@ -325,9 +373,8 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
       errors.email = 'Este campo é obrigatório';
     }
     
-    if (!cliente.cnpjCpf?.trim()) {
-      errors.cnpjCpf = 'Este campo é obrigatório';
-    }
+    // CPF/CNPJ não é validado como obrigatório aqui pois depende se é cliente brasileiro ou estrangeiro
+    // A validação será feita pelo backend
     
     if (!cliente.cidadeId) {
       errors.cidade = 'Selecione uma cidade';
@@ -369,9 +416,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
     if (cepSemMascara.length !== 0 && cepSemMascara.length !== 8) {
       setErrorMessage('O CEP deve ter exatamente 8 dígitos.');
       return;
-    }
-
-    // Formatando os dados para corresponder ao modelo esperado pelo backend
+    }    // Formatando os dados para corresponder ao modelo esperado pelo backend
     const clienteFormatado = {
       ...cliente,
       // Convertendo valores numéricos
@@ -385,6 +430,8 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
       estadoCivil: cliente.estadoCivil,
       // Garantindo que os campos obrigatórios não estejam vazios
       dataNascimento: cliente.dataNascimento || null,
+      // CPF/CNPJ: envia null se estiver vazio para evitar problemas de duplicação
+      cnpjCpf: cliente.cnpjCpf?.trim() || null,
     };
 
     console.log('Dados enviados:', clienteFormatado);
@@ -398,16 +445,16 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(clienteFormatado),
-    })
-      .then((response) => {
+    })      .then((response) => {
         if (!response.ok) {
           console.error('Erro na resposta:', response.status, response.statusText);
           
           return response.text().then(text => {
             let error;
+            let errorObj = null;
             try {
               // Tenta converter a resposta para JSON para extrair a mensagem de erro
-              const errorObj = JSON.parse(text);
+              errorObj = JSON.parse(text);
               error = errorObj.erro || errorObj.message || 'Erro desconhecido ao salvar cliente';
               console.error('Resposta do servidor:', errorObj);
             } catch (e) {
@@ -415,6 +462,20 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               error = text || 'Erro ao salvar cliente';
               console.error('Resposta do servidor (texto):', text);
             }
+            
+            // Se for um erro relacionado ao CPF/CNPJ, exibe no campo específico
+            if (errorObj && errorObj.erro) {
+              const errorMessage = errorObj.erro;
+              if (errorMessage.includes('CNPJ/CPF') || errorMessage.includes('CPF') || errorMessage.includes('CNPJ')) {
+                setFieldErrors(prev => ({
+                  ...prev,
+                  cnpjCpf: errorMessage
+                }));
+                // Não define errorMessage geral para que a mensagem apareça apenas no campo
+                throw new Error('');
+              }
+            }
+            
             throw new Error(error);
           });
         }
@@ -422,10 +483,12 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
       })
       .then(() => {
         navigate('/clientes');
-      })
-      .catch((error) => {
+      })      .catch((error) => {
         console.error('Erro capturado:', error);
-        setErrorMessage(error.message);
+        // Só exibe mensagem geral se não for um erro de campo específico
+        if (error.message.trim()) {
+          setErrorMessage(error.message);
+        }
       });
   };
 
@@ -475,26 +538,22 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
       condicaoPagamentoDescricao: condicao.descricao,
     });
     setIsCondicaoPagamentoModalOpen(false);
-  };
-  return (
-    <Box sx={{ padding: 2, bgcolor: '#f8f9fa', minHeight: '100vh' }}>
-      <Typography 
-        variant="h5" 
-        component="h1" 
-        align="center" 
-        gutterBottom 
-        sx={{ mb: 2, color: '#333' }}
-      >
-        {id ? 'Editar Cliente' : 'Cadastrar Novo Cliente'}
-      </Typography>        <Paper 
+  };  return (    <Box sx={{ 
+      padding: { xs: 2, md: 3 }, 
+      bgcolor: '#f8f9fa', 
+      minHeight: '100vh',
+      paddingBottom: 0.5 // Reduzido de 1 para 0.5
+    }}>
+      <Paper 
         component="form"
         onSubmit={handleSubmit}
-        elevation={1}
-        sx={{
-          width: '100%',
-          maxWidth: 1400, // Aumentado de 1200 para 1400
+        elevation={10}        sx={{
+          width: '95%',
+          maxWidth: 1390,
+          minHeight: '70vh',
           mx: 'auto',
-          p: { xs: 2, md: 3 },
+          p: { xs: 2, md: 3, lg: 4 },
+          pb: 0, // Removido padding bottom para aproximar mais da margem inferior
           borderRadius: 2,
           overflow: 'hidden',
           position: 'relative',
@@ -507,10 +566,47 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
             width: '100%'
           }
         }}
-      >        {/* Linha 1: Código, Tipo de Pessoa, Nome, Apelido, Estado Civil, Ativo */}
+      >        {/* Cabeçalho com título e switch Ativo */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 4 
+        }}>
+          {/* Espaço vazio à esquerda para centralizar o título */}
+          <Box sx={{ width: 120 }}></Box>
+          
+          {/* Título centralizado */}
+          <Typography 
+            variant="h5" 
+            component="h1" 
+            align="center" 
+            sx={{ color: '#333', fontWeight: 600, flex: 1 }}
+          >
+            {id ? 'Editar Cliente' : 'Cadastrar Novo Cliente'}
+          </Typography>
+            {/* Switch Ativo à direita */}
+          <Box sx={{ width: 120, display: 'flex', justifyContent: 'flex-end' }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={cliente.ativo}
+                  onChange={handleChange}
+                  name="ativo"
+                  color="primary"
+                  disabled={!id} // Desabilita durante cadastro (quando não há id)
+                />
+              }
+              label="Ativo"
+              sx={{ mr: 0 }}
+            />
+          </Box>
+        </Box>
 
-        <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
-          <Grid item sx={{ width: '5%', minWidth: 80 }}>
+        {/* Linha 1: Código, Tipo de Pessoa, Nome, Apelido, Estado Civil */}
+
+        <Grid container spacing={2} alignItems="center" sx={{ mb: 4 }}>
+          <Grid item sx={{ width: '6%', minWidth: 80 }}>
             <TextField
               fullWidth
               size="small"
@@ -523,7 +619,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
             />
           </Grid>
 
-          <Grid item sx={{ width: '14%', minWidth: 140 }}>
+          <Grid item sx={{ width: '16%', minWidth: 140 }}>
             <FormControl fullWidth size="small">
               <InputLabel>Tipo de Pessoa</InputLabel>
               <Select
@@ -538,7 +634,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
             </FormControl>
           </Grid>
 
-          <Grid item sx={{ width: '25%' }}>
+          <Grid item sx={{ width: cliente.tipo === 'FISICA' ? '28%' : '35%' }}>
             <TextField
               fullWidth
               required
@@ -552,8 +648,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               error={!!fieldErrors.nome}
               helperText={fieldErrors.nome || ''}
             />
-          </Grid>
-          <Grid item sx={{ width: '15%' }}>
+          </Grid>          <Grid item sx={{ width: cliente.tipo === 'FISICA' ? '18%' : '27%' }}>
             <TextField
               fullWidth
               size="small"
@@ -565,44 +660,33 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               variant="outlined"
             />
           </Grid>
-          <Grid item sx={{ width: '15%' }}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Estado Civil</InputLabel>
-              <Select
-                name="estadoCivil"
-                value={cliente.estadoCivil}
-                onChange={handleChange}
-                label="Estado Civil"
-                sx={{ minWidth: 140 }}
-              >
-                <MenuItem value="">Selecione...</MenuItem>
-                <MenuItem value="SOLTEIRO">Solteiro(a)</MenuItem>
-                <MenuItem value="CASADO">Casado(a)</MenuItem>
-                <MenuItem value="DIVORCIADO">Divorciado(a)</MenuItem>
-                <MenuItem value="VIUVO">Viúvo(a)</MenuItem>
-                <MenuItem value="UNIAO_ESTAVEL">União Estável</MenuItem>
-                <MenuItem value="SEPARADO">Separado(a)</MenuItem>
-                <MenuItem value="OUTRO">Outro</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item sx={{ width: '12%', display: 'flex', justifyContent: 'center' }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={cliente.ativo}
+          {cliente.tipo === 'FISICA' && (
+            <Grid item sx={{ width: '15%' }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Estado Civil</InputLabel>
+                <Select
+                  name="estadoCivil"
+                  value={cliente.estadoCivil}
                   onChange={handleChange}
-                  name="ativo"
-                  color="primary"
-                />
-              }
-              label="Ativo"
-            />
-          </Grid>
+                  label="Estado Civil"
+                  sx={{ minWidth: 140 }}
+                >
+                  <MenuItem value="">Selecione...</MenuItem>
+                  <MenuItem value="SOLTEIRO">Solteiro(a)</MenuItem>
+                  <MenuItem value="CASADO">Casado(a)</MenuItem>
+                  <MenuItem value="DIVORCIADO">Divorciado(a)</MenuItem>
+                  <MenuItem value="VIUVO">Viúvo(a)</MenuItem>
+                  <MenuItem value="UNIAO_ESTAVEL">União Estável</MenuItem>
+                  <MenuItem value="SEPARADO">Separado(a)</MenuItem>
+                  <MenuItem value="OUTRO">Outro</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
         </Grid>{/* Linha 2: Rua, Número, Complemento, Bairro, CEP, Cidade */}
-        <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid container spacing={2} sx={{ mb: 4 }}>
 
-          <Grid item sx={{ width: '30%' }}>
+          <Grid item sx={{ width: '25%' }}>
             <TextField
               fullWidth
               required
@@ -616,8 +700,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               error={!!fieldErrors.endereco}
               helperText={fieldErrors.endereco || ''}
             />
-          </Grid>
-              <Grid item sx={{ width: '8%', minWidth: 80 }}>
+          </Grid>              <Grid item sx={{ width: '8%', minWidth: 80 }}>
             <TextField
               fullWidth
               required
@@ -628,7 +711,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               onChange={(e) => handleNumericChange(e)}
               placeholder="Nº"
               variant="outlined"
-              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+              inputProps={{ inputMode: 'numeric' }}
               error={!!fieldErrors.numero}
               helperText={fieldErrors.numero || ''}
             />
@@ -660,9 +743,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               error={!!fieldErrors.bairro}
               helperText={fieldErrors.bairro || ''}
             />
-          </Grid>
-
-          <Grid item sx={{ width: '10%', minWidth: 100 }}>
+          </Grid>          <Grid item sx={{ width: '10%', minWidth: 100 }}>
             <TextField
               fullWidth
               required
@@ -674,7 +755,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               variant="outlined"
               error={!!fieldErrors.cep || (cliente.cep && cliente.cep.length !== 8)}
               helperText={fieldErrors.cep || (cliente.cep && cliente.cep.length !== 8 ? 'CEP inválido' : '')}
-              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+              inputProps={{ inputMode: 'numeric' }}
               autoComplete="off"
             />
           </Grid>
@@ -716,8 +797,8 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               />
             </FormControl>
           </Grid>
-        </Grid>{/* Linha 3: Telefone, Email, Sexo, Data de Nascimento */}
-        <Grid container spacing={2} sx={{ mb: 2 }}>          <Grid item sx={{ width: '20%', minWidth: 150 }}>            <TextField
+        </Grid>        {/* Linha 3: Telefone, Email, Sexo, Data de Nascimento */}
+        <Grid container spacing={2} sx={{ mb: 4 }}><Grid item sx={{ width: '20%', minWidth: 150 }}>            <TextField
               fullWidth
               required
               size="small"
@@ -732,7 +813,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               autoComplete="off"
             />
           </Grid>
-          <Grid item sx={{ width: cliente.tipo === 'FISICA' ? '25%' : '40%' }}>
+          <Grid item sx={{ width: cliente.tipo === 'FISICA' ? '25%' : '25%' }}>
             <TextField
               fullWidth
               required
@@ -752,21 +833,22 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
           {cliente.tipo === 'FISICA' && (
             <Grid item sx={{ width: '15%', minWidth: 120 }}>
               <FormControl fullWidth size="small">
-                <InputLabel>Sexo</InputLabel>
-                <Select
+                <InputLabel>Sexo</InputLabel>                <Select
                   name="sexo"
                   value={cliente.sexo}
                   onChange={handleChange}
                   label="Sexo"
                 >
+                  <MenuItem value="">Selecione...</MenuItem>
                   <MenuItem value="M">Masculino</MenuItem>
                   <MenuItem value="F">Feminino</MenuItem>
+                  <MenuItem value="O">Outro</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
           )}
           
-          <Grid item sx={{ width: cliente.tipo === 'FISICA' ? '20%' : '35%', minWidth: 150 }}>
+          <Grid item sx={{ width: cliente.tipo === 'FISICA' ? '20%' : '20%', minWidth: 150 }}>
             <TextField
               fullWidth
               size="small"
@@ -783,12 +865,9 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
             />
           </Grid>
         </Grid>        {/* Linha 4: CPF/CNPJ, RG/Inscrição Estadual, Limite de Crédito, Condição de Pagamento */}
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-
-          <Grid item sx={{ width: '15%', minWidth: 150 }}>
+        <Grid container spacing={2} sx={{ mb: 4 }}>          <Grid item sx={{ width: cliente.tipo === 'FISICA' ? '15%' : '20%', minWidth: 150 }}>
             <TextField
               fullWidth
-              required
               size="small"
               label={cliente.tipo === 'FISICA' ? 'CPF' : 'CNPJ'}
               name="cnpjCpf"
@@ -800,7 +879,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               variant="outlined"
               error={!!fieldErrors.cnpjCpf || (cliente.cnpjCpf && ((cliente.tipo === 'FISICA' && cliente.cnpjCpf.length !== 11) || (cliente.tipo === 'JURIDICA' && cliente.cnpjCpf.length !== 14)))}
               helperText={fieldErrors.cnpjCpf || (cliente.cnpjCpf && ((cliente.tipo === 'FISICA' && cliente.cnpjCpf.length !== 11) || (cliente.tipo === 'JURIDICA' && cliente.cnpjCpf.length !== 14)) ? `${cliente.tipo === 'FISICA' ? 'CPF' : 'CNPJ'} inválido` : '')}
-              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+              inputProps={{ inputMode: 'numeric' }}
               autoComplete="off"
             />
           </Grid>
@@ -875,13 +954,12 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               />
             </FormControl>
           </Grid>
-        </Grid>{/* Linha 5: Observação */}
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid item sx={{ width: '100%' }}>
+        </Grid>        {/* Linha 5: Observação */}
+        <Grid container spacing={2} sx={{ mb: 2 }}>          <Grid item sx={{ width: '100%' }}>
             <TextField
               fullWidth
               multiline
-              rows={3}
+              rows={3} // Reduzido de 4 para 3 linhas
               size="small"
               label="Observações"
               name="observacao"
@@ -890,19 +968,9 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               placeholder="Informações adicionais sobre o cliente"
               variant="outlined"
             />
-          </Grid>
-        </Grid>          {/* Informações de registro */}        <Stack spacing={1} sx={{ mt: 2, mb: 1 }}>
-          {cliente.dataCadastro && (
-            <Typography variant="caption" color="text.secondary">
-              Data de cadastro: {new Date(cliente.dataCadastro).toLocaleString('pt-BR')}
-            </Typography>
-          )}
-          {cliente.ultimaModificacao && (
-            <Typography variant="caption" color="text.secondary">
-              Última modificação: {new Date(cliente.ultimaModificacao).toLocaleString('pt-BR')}
-            </Typography>
-          )}
-        </Stack>{/* Mensagem de erro */}
+          </Grid>        </Grid>
+
+        {/* Mensagem de erro */}
         {errorMessage && (
           <Alert 
             severity="error" 
@@ -912,37 +980,59 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
           >
             {errorMessage}
           </Alert>
-        )}{/* Botões */}        <Box
+        )}        {/* Botões e Informações de registro */}
+        <Box
           sx={{
             display: 'flex',
-            justifyContent: 'flex-end',
-            gap: 1,
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 2,
             mt: 2,
             pt: 2,
-            borderTop: '1px solid #eee',
-            position: 'sticky',
-            bottom: '20px',
+            borderTop: '1px solid #eee',            position: 'sticky',
+            bottom: '5px', // Reduzido de 10px para 5px
             backgroundColor: 'white',
             zIndex: 10,
-            pb: 2,
+            pb: 0.5, // Reduzido de 1 para 0.5
             boxShadow: '0px -4px 8px rgba(0, 0, 0, 0.05)'
           }}
         >
-          <Button
-            variant="outlined"
-            onClick={handleCancel}
-            color="inherit"
-            type="button"
-          >
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            type="submit"
-            color="primary"
-          >
-            Salvar
-          </Button>
+          {/* Informações de registro - lado esquerdo */}
+          <Stack spacing={0.5} sx={{ flex: 1 }}>
+            {cliente.dataCadastro && (
+              <Typography variant="caption" color="text.secondary">
+                Data de cadastro: {new Date(cliente.dataCadastro).toLocaleString('pt-BR')}
+              </Typography>
+            )}
+            {cliente.ultimaModificacao && (
+              <Typography variant="caption" color="text.secondary">
+                Última modificação: {new Date(cliente.ultimaModificacao).toLocaleString('pt-BR')}
+              </Typography>
+            )}
+          </Stack>
+
+          {/* Botões - lado direito */}
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={handleCancel}
+              color="inherit"
+              type="button"
+              size="medium"
+              sx={{ minWidth: 100, py: 1 }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="contained"
+              type="submit"
+              color="primary"
+              size="medium"
+              sx={{ minWidth: 100, py: 1 }}
+            >
+              Salvar
+            </Button>
+          </Box>
         </Box>
       </Paper>
 
