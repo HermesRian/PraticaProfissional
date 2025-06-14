@@ -17,6 +17,7 @@ public class CidadeServiceImpl implements CidadeService {
 
     @Override
     public Cidade salvar(Cidade cidade) {
+        //Debug: Verifica se a cidade já existe
         return cidadeDAO.salvar(cidade);
     }
 
