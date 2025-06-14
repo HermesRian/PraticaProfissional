@@ -59,6 +59,84 @@ const converterNumeroParaEstadoCivil = (numero) => {
   }
 };
 
+// Funções de validação de CPF e CNPJ
+const validarCPF = (cpf) => {
+  // Remove caracteres não numéricos
+  const cpfLimpo = cpf.replace(/\D/g, '');
+  
+  // Verifica se tem 11 dígitos
+  if (cpfLimpo.length !== 11) return false;
+  
+  // Verifica se todos os dígitos são iguais
+  if (/^(\d)\1{10}$/.test(cpfLimpo)) return false;
+  
+  // Validação dos dígitos verificadores
+  let soma = 0;
+  let resto;
+  
+  // Primeiro dígito verificador
+  for (let i = 1; i <= 9; i++) {
+    soma += parseInt(cpfLimpo.substring(i - 1, i)) * (11 - i);
+  }
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpfLimpo.substring(9, 10))) return false;
+  
+  // Segundo dígito verificador
+  soma = 0;
+  for (let i = 1; i <= 10; i++) {
+    soma += parseInt(cpfLimpo.substring(i - 1, i)) * (12 - i);
+  }
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpfLimpo.substring(10, 11))) return false;
+  
+  return true;
+};
+
+const validarCNPJ = (cnpj) => {
+  // Remove caracteres não numéricos
+  const cnpjLimpo = cnpj.replace(/\D/g, '');
+  
+  // Verifica se tem 14 dígitos
+  if (cnpjLimpo.length !== 14) return false;
+  
+  // Verifica se todos os dígitos são iguais
+  if (/^(\d)\1{13}$/.test(cnpjLimpo)) return false;
+  
+  // Validação dos dígitos verificadores
+  let tamanho = cnpjLimpo.length - 2;
+  let numeros = cnpjLimpo.substring(0, tamanho);
+  let digitos = cnpjLimpo.substring(tamanho);
+  let soma = 0;
+  let pos = tamanho - 7;
+  
+  // Primeiro dígito verificador
+  for (let i = tamanho; i >= 1; i--) {
+    soma += numeros.charAt(tamanho - i) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  
+  let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+  if (resultado !== parseInt(digitos.charAt(0))) return false;
+  
+  // Segundo dígito verificador
+  tamanho = tamanho + 1;
+  numeros = cnpjLimpo.substring(0, tamanho);
+  soma = 0;
+  pos = tamanho - 7;
+  
+  for (let i = tamanho; i >= 1; i--) {
+    soma += numeros.charAt(tamanho - i) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  
+  resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+  if (resultado !== parseInt(digitos.charAt(1))) return false;
+  
+  return true;
+};
+
 // Componente de formulário de cliente
 const ClienteForm = () => {    const [cliente, setCliente] = useState({
     nome: '',
@@ -267,6 +345,38 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
     }
     return cleanValue;
   };
+  // Função para validar CPF/CNPJ em tempo real
+  const validarCpfCnpjEmTempoReal = (valor, tipo) => {
+    if (!valor) return { isValid: true, message: '' };
+    
+    const valorLimpo = valor.replace(/\D/g, '');
+    const isCpf = tipo === 'FISICA';
+    const tamanhoEsperado = isCpf ? 11 : 14;
+    
+    // Se ainda não tem o tamanho completo, não mostra erro
+    if (valorLimpo.length < tamanhoEsperado) {
+      return { isValid: true, message: '' };
+    }
+    
+    // Se tem o tamanho esperado, valida
+    if (valorLimpo.length === tamanhoEsperado) {
+      const isDocumentoValido = isCpf ? validarCPF(valorLimpo) : validarCNPJ(valorLimpo);
+      if (!isDocumentoValido) {
+        return { 
+          isValid: false, 
+          message: `${isCpf ? 'CPF' : 'CNPJ'} inválido` 
+        };
+      }
+      return { isValid: true, message: '' };
+    }
+    
+    // Se tem mais dígitos que o esperado
+    return { 
+      isValid: false, 
+      message: `${isCpf ? 'CPF' : 'CNPJ'} deve ter ${tamanhoEsperado} dígitos` 
+    };
+  };
+
   // Função específica para campos numéricos com máscara
   const handleNumericChange = (e, maxLength, maskFunction) => {
     const { name } = e.target;
@@ -400,15 +510,33 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
       setErrorMessage('O telefone deve ter 10 ou 11 dígitos.');
       return;
     }
-    
-    // Validação do CPF/CNPJ
+      // Validação do CPF/CNPJ
     const cpfCnpjSemMascara = cliente.cnpjCpf?.replace(/\D/g, '') || '';
     const isCpf = cliente.tipo === 'FISICA';
     const tamanhoEsperado = isCpf ? 11 : 14;
     
-    if (cpfCnpjSemMascara.length !== 0 && cpfCnpjSemMascara.length !== tamanhoEsperado) {
-      setErrorMessage(`O ${isCpf ? 'CPF' : 'CNPJ'} deve ter exatamente ${tamanhoEsperado} dígitos.`);
-      return;
+    if (cpfCnpjSemMascara.length !== 0) {
+      // Verifica o tamanho primeiro
+      if (cpfCnpjSemMascara.length !== tamanhoEsperado) {
+        setFieldErrors(prev => ({
+          ...prev,
+          cnpjCpf: `O ${isCpf ? 'CPF' : 'CNPJ'} deve ter exatamente ${tamanhoEsperado} dígitos.`
+        }));
+        setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
+        return;
+      }
+      
+      // Valida o CPF ou CNPJ
+      const isDocumentoValido = isCpf ? validarCPF(cpfCnpjSemMascara) : validarCNPJ(cpfCnpjSemMascara);
+      
+      if (!isDocumentoValido) {
+        setFieldErrors(prev => ({
+          ...prev,
+          cnpjCpf: `${isCpf ? 'CPF' : 'CNPJ'} inválido. Verifique os dígitos informados.`
+        }));
+        setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
+        return;
+      }
     }
     
     // Validação do CEP
@@ -877,8 +1005,14 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
                 handleNumericChange(e, maxLength);
               }}
               variant="outlined"
-              error={!!fieldErrors.cnpjCpf || (cliente.cnpjCpf && ((cliente.tipo === 'FISICA' && cliente.cnpjCpf.length !== 11) || (cliente.tipo === 'JURIDICA' && cliente.cnpjCpf.length !== 14)))}
-              helperText={fieldErrors.cnpjCpf || (cliente.cnpjCpf && ((cliente.tipo === 'FISICA' && cliente.cnpjCpf.length !== 11) || (cliente.tipo === 'JURIDICA' && cliente.cnpjCpf.length !== 14)) ? `${cliente.tipo === 'FISICA' ? 'CPF' : 'CNPJ'} inválido` : '')}
+              error={!!fieldErrors.cnpjCpf || (() => {
+                const validacao = validarCpfCnpjEmTempoReal(cliente.cnpjCpf, cliente.tipo);
+                return !validacao.isValid;
+              })()}
+              helperText={fieldErrors.cnpjCpf || (() => {
+                const validacao = validarCpfCnpjEmTempoReal(cliente.cnpjCpf, cliente.tipo);
+                return validacao.message;
+              })()}
               inputProps={{ inputMode: 'numeric' }}
               autoComplete="off"
             />
