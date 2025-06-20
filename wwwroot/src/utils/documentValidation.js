@@ -223,3 +223,31 @@ export const formatIE = (value) => {
   }
   return cleanValue;
 };
+
+/**
+ * Censura parcialmente o CPF mostrando apenas os 3 primeiros e 2 últimos dígitos
+ * @param {string} value - CPF com ou sem formatação
+ * @returns {string} - CPF parcialmente censurado (xxx.***.***-xx)
+ */
+export const censurarCPF = (value) => {
+  if (!value) return '';
+  const cleanValue = value.replace(/[^0-9]/g, '');
+  if (cleanValue.length !== 11) return formatCPF(cleanValue);
+  
+  // Mostra apenas os 3 primeiros e 2 últimos dígitos
+  return `${cleanValue.substring(0, 3)}.***.***-${cleanValue.substring(9, 11)}`;
+};
+
+/**
+ * Censura parcialmente o CNPJ mostrando apenas os 2 primeiros e 4 últimos dígitos
+ * @param {string} value - CNPJ com ou sem formatação
+ * @returns {string} - CNPJ parcialmente censurado
+ */
+export const censurarCNPJ = (value) => {
+  if (!value) return '';
+  const cleanValue = value.replace(/[^0-9]/g, '');
+  if (cleanValue.length !== 14) return formatCNPJ(cleanValue);
+  
+  // Mostra apenas os 2 primeiros e 4 últimos dígitos
+  return `${cleanValue.substring(0, 2)}.***.***/****-${cleanValue.substring(10, 14)}`;
+};

@@ -39,7 +39,7 @@ import {
   Business as BusinessIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
-import { formatCPF, formatCNPJ, formatCEP, formatTelefone } from '../../utils/documentValidation';
+import { formatCPF, formatCNPJ, formatCEP, formatTelefone, censurarCPF, censurarCNPJ } from '../../utils/documentValidation';
 
 const ClienteListMUI = () => {
   const [clientes, setClientes] = useState([]);
@@ -50,6 +50,7 @@ const ClienteListMUI = () => {
   const [filtro, setFiltro] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [mostrarDocumentoCompleto, setMostrarDocumentoCompleto] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -218,41 +219,55 @@ const ClienteListMUI = () => {
           borderRadius: 2,
           overflow: 'hidden'
         }}
-      >        {/* Cabeçalho com pesquisa e botão */}
-        <Box sx={{ 
+      >        {/* Cabeçalho com pesquisa e botão */}        <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
           mb: 3,
-          gap: 2
-        }}>          <TextField
-            variant="outlined"
-            placeholder="Pesquisar por código, nome, CPF/CNPJ, email..."
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ 
-              width: 350,
-              '& .MuiOutlinedInput-root': {
-                height: 40,
-                '& fieldset': {
-                  borderColor: '#e0e0e0',
-                },
-                '&:hover fieldset': {
-                  borderColor: '#1976d2',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#1976d2',
+          gap: 2,
+          flexWrap: { xs: 'wrap', sm: 'nowrap' }
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
+            <TextField
+              variant="outlined"
+              placeholder="Pesquisar por código, nome, CPF/CNPJ, email..."
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ 
+                width: { xs: '100%', sm: 350 },
+                '& .MuiOutlinedInput-root': {
+                  height: 40,
+                  '& fieldset': {
+                    borderColor: '#e0e0e0',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#1976d2',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#1976d2',
+                  }
                 }
+              }}
+            />
+            <FormControlLabel
+              control={
+                <Switch 
+                  checked={mostrarDocumentoCompleto}
+                  onChange={(e) => setMostrarDocumentoCompleto(e.target.checked)}
+                  color="primary"
+                  size="small"
+                />
               }
-            }}
-          />
+              label={<Typography variant="body2">Exibir documentos completos</Typography>}
+            />
+          </Box>
           <Button
             component={Link}
             to="/clientes/cadastrar"
@@ -393,13 +408,12 @@ const ClienteListMUI = () => {
                       color={getTipoLabel(cliente.tipo) === 'Pessoa Física' ? 'primary' : 'secondary'}
                       variant="outlined"
                     />
-                  </TableCell>
-                  <TableCell>
+                  </TableCell>                  <TableCell>
                     <Typography variant="body2" fontFamily="monospace">
                       {cliente.cnpjCpf ? (
                         getTipoLabel(cliente.tipo) === 'Pessoa Física' ? 
-                        formatCPF(cliente.cnpjCpf) : 
-                        formatCNPJ(cliente.cnpjCpf)
+                        (mostrarDocumentoCompleto ? formatCPF(cliente.cnpjCpf) : censurarCPF(cliente.cnpjCpf)) : 
+                        (mostrarDocumentoCompleto ? formatCNPJ(cliente.cnpjCpf) : censurarCNPJ(cliente.cnpjCpf))
                       ) : 'Não informado'}
                     </Typography>
                   </TableCell>
@@ -710,8 +724,7 @@ const ClienteListMUI = () => {
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
-              </Grid>
-              <Grid item sx={{ width: '20%', minWidth: 150 }}>
+              </Grid>              <Grid item sx={{ width: '20%', minWidth: 150 }}>
                 <TextField
                   fullWidth
                   size="small"
@@ -723,6 +736,7 @@ const ClienteListMUI = () => {
                   ) : ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
+                  helperText="Versão completa do documento (somente visível no modal)"
                 />
               </Grid>
 
