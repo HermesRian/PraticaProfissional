@@ -2,6 +2,8 @@ package com.cantina.database;
 
 import com.cantina.entities.Cliente;
 import com.cantina.exceptions.DuplicateCnpjCpfException;
+import com.cantina.exceptions.InvalidDocumentException;
+import com.cantina.utils.DocumentValidationUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,6 +13,15 @@ import java.math.BigDecimal;
 public class ClienteDAO {
 
     public void salvar(Cliente cliente) {
+        // Validação de CPF/CNPJ antes de salvar
+        if (cliente.getTipo() != null) {
+            boolean documentoValido = DocumentValidationUtil.validarCpfCnpj(cliente.getCnpjCpf(), cliente.getTipo());
+            if (!documentoValido) {
+                String tipoDocumento = cliente.getTipo() == 0 ? "CPF" : "CNPJ";
+                throw new InvalidDocumentException(tipoDocumento + " inválido");
+            }
+        }
+
         String sql = "INSERT INTO cliente (nome, cnpjCpf, endereco, numero, complemento, bairro, cep, cidade_id, telefone, email, ativo, " +
                 "apelido, limite_credito, nacionalidade, rg_inscricao_estadual, data_nascimento, estado_civil, tipo, sexo, " +
                 "condicao_pagamento_id, limite_credito2, observacao, data_cadastro, ultima_modificacao) " +
@@ -159,6 +170,15 @@ public class ClienteDAO {
     }
 
     public void atualizar(Cliente cliente) {
+        // Validação de CPF/CNPJ antes de atualizar
+        if (cliente.getTipo() != null) {
+            boolean documentoValido = DocumentValidationUtil.validarCpfCnpj(cliente.getCnpjCpf(), cliente.getTipo());
+            if (!documentoValido) {
+                String tipoDocumento = cliente.getTipo() == 0 ? "CPF" : "CNPJ";
+                throw new InvalidDocumentException(tipoDocumento + " inválido");
+            }
+        }
+
         String sql = "UPDATE cliente SET nome = ?, cnpjCpf = ?, endereco = ?, numero = ?, complemento = ?, bairro = ?, cep = ?, " +
                 "cidade_id = ?, telefone = ?, email = ?, ativo = ?, apelido = ?, limite_credito = ?, nacionalidade = ?, " +
                 "rg_inscricao_estadual = ?, data_nascimento = ?, estado_civil = ?, tipo = ?, sexo = ?, " +

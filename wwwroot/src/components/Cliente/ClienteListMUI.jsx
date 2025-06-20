@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -39,6 +39,7 @@ import {
   Business as BusinessIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
+import { formatCPF, formatCNPJ, formatCEP, formatTelefone } from '../../utils/documentValidation';
 
 const ClienteListMUI = () => {
   const [clientes, setClientes] = useState([]);
@@ -162,57 +163,7 @@ const ClienteListMUI = () => {
     cliente.email?.toLowerCase().includes(filtro.toLowerCase()) ||
     getCidadeNome(cliente.cidadeId)?.toLowerCase().includes(filtro.toLowerCase())
   );
-
-  const formatCPF = (value) => {
-    if (!value) return '';
-    const cleanValue = value.replace(/[^0-9]/g, '');
-    if (cleanValue.length <= 11) {
-      return cleanValue
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})/, '$1-$2');
-    }
-    return cleanValue;
-  };
-
-  const formatCNPJ = (value) => {
-    if (!value) return '';
-    const cleanValue = value.replace(/[^0-9]/g, '');
-    if (cleanValue.length <= 14) {
-      return cleanValue
-        .replace(/(\d{2})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1/$2')
-        .replace(/(\d{4})(\d{1,2})/, '$1-$2');
-    }
-    return cleanValue;
-  };
-
-  const formatTelefone = (value) => {
-    if (!value) return '';
-    const cleanValue = value.replace(/[^0-9]/g, '');
-    if (cleanValue.length <= 11) {
-      if (cleanValue.length <= 10) {
-        return cleanValue
-          .replace(/(\d{2})(\d)/, '($1) $2')
-          .replace(/(\d{4})(\d{1,4})/, '$1-$2');
-      } else {
-        return cleanValue
-          .replace(/(\d{2})(\d)/, '($1) $2')
-          .replace(/(\d{5})(\d{1,4})/, '$1-$2');
-      }
-    }
-    return cleanValue;
-  };
-
-  const formatCEP = (value) => {
-    if (!value) return '';
-    const cleanValue = value.replace(/[^0-9]/g, '');
-    if (cleanValue.length <= 8) {
-      return cleanValue.replace(/(\d{5})(\d{1,3})/, '$1-$2');
-    }
-    return cleanValue;
-  };
+  // As funções de formatação formatTelefone e formatCEP foram movidas para utils/documentValidation.js
 
   const getTipoLabel = (tipo) => {
     if (typeof tipo === 'number') {

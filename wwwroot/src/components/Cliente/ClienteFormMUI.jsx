@@ -2,6 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import CidadeModal from '../Cidade/CidadeModal';
 import CondicaoPagamentoModal from '../CondicaoPagamento/CondicaoPagamentoModal';
+import { 
+  validarCPF, 
+  validarCNPJ, 
+  validarCpfCnpjEmTempoReal, 
+  formatCPF, 
+  formatCNPJ, 
+  formatCEP, 
+  formatTelefone, 
+  formatRG, 
+  formatIE 
+} from '../../utils/documentValidation';
 
 // Importações do Material-UI
 import {
@@ -59,83 +70,7 @@ const converterNumeroParaEstadoCivil = (numero) => {
   }
 };
 
-// Funções de validação de CPF e CNPJ
-const validarCPF = (cpf) => {
-  // Remove caracteres não numéricos
-  const cpfLimpo = cpf.replace(/\D/g, '');
-  
-  // Verifica se tem 11 dígitos
-  if (cpfLimpo.length !== 11) return false;
-  
-  // Verifica se todos os dígitos são iguais
-  if (/^(\d)\1{10}$/.test(cpfLimpo)) return false;
-  
-  // Validação dos dígitos verificadores
-  let soma = 0;
-  let resto;
-  
-  // Primeiro dígito verificador
-  for (let i = 1; i <= 9; i++) {
-    soma += parseInt(cpfLimpo.substring(i - 1, i)) * (11 - i);
-  }
-  resto = (soma * 10) % 11;
-  if (resto === 10 || resto === 11) resto = 0;
-  if (resto !== parseInt(cpfLimpo.substring(9, 10))) return false;
-  
-  // Segundo dígito verificador
-  soma = 0;
-  for (let i = 1; i <= 10; i++) {
-    soma += parseInt(cpfLimpo.substring(i - 1, i)) * (12 - i);
-  }
-  resto = (soma * 10) % 11;
-  if (resto === 10 || resto === 11) resto = 0;
-  if (resto !== parseInt(cpfLimpo.substring(10, 11))) return false;
-  
-  return true;
-};
-
-const validarCNPJ = (cnpj) => {
-  // Remove caracteres não numéricos
-  const cnpjLimpo = cnpj.replace(/\D/g, '');
-  
-  // Verifica se tem 14 dígitos
-  if (cnpjLimpo.length !== 14) return false;
-  
-  // Verifica se todos os dígitos são iguais
-  if (/^(\d)\1{13}$/.test(cnpjLimpo)) return false;
-  
-  // Validação dos dígitos verificadores
-  let tamanho = cnpjLimpo.length - 2;
-  let numeros = cnpjLimpo.substring(0, tamanho);
-  let digitos = cnpjLimpo.substring(tamanho);
-  let soma = 0;
-  let pos = tamanho - 7;
-  
-  // Primeiro dígito verificador
-  for (let i = tamanho; i >= 1; i--) {
-    soma += numeros.charAt(tamanho - i) * pos--;
-    if (pos < 2) pos = 9;
-  }
-  
-  let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
-  if (resultado !== parseInt(digitos.charAt(0))) return false;
-  
-  // Segundo dígito verificador
-  tamanho = tamanho + 1;
-  numeros = cnpjLimpo.substring(0, tamanho);
-  soma = 0;
-  pos = tamanho - 7;
-  
-  for (let i = tamanho; i >= 1; i--) {
-    soma += numeros.charAt(tamanho - i) * pos--;
-    if (pos < 2) pos = 9;
-  }
-  
-  resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
-  if (resultado !== parseInt(digitos.charAt(1))) return false;
-  
-  return true;
-};
+// As funções de validação de CPF e CNPJ foram movidas para utils/documentValidation.js
 
 // Componente de formulário de cliente
 const ClienteForm = () => {    const [cliente, setCliente] = useState({
@@ -273,109 +208,8 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
     } else {
       setCliente({ ...cliente, [name]: type === 'checkbox' ? checked : value });
     }
-  };
-  // Funções de máscara
-  const formatCPF = (value) => {
-    const cleanValue = value.replace(/[^0-9]/g, '');
-    if (cleanValue.length <= 11) {
-      return cleanValue
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})/, '$1-$2');
-    }
-    return cleanValue;
-  };
-
-  const formatCNPJ = (value) => {
-    const cleanValue = value.replace(/[^0-9]/g, '');
-    if (cleanValue.length <= 14) {
-      return cleanValue
-        .replace(/(\d{2})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1/$2')
-        .replace(/(\d{4})(\d{1,2})/, '$1-$2');
-    }
-    return cleanValue;
-  };
-
-  const formatCEP = (value) => {
-    const cleanValue = value.replace(/[^0-9]/g, '');
-    if (cleanValue.length <= 8) {
-      return cleanValue.replace(/(\d{5})(\d{1,3})/, '$1-$2');
-    }
-    return cleanValue;
-  };
-  const formatTelefone = (value) => {
-    const cleanValue = value.replace(/[^0-9]/g, '');
-    if (cleanValue.length <= 11) {
-      if (cleanValue.length <= 10) {
-        return cleanValue
-          .replace(/(\d{2})(\d)/, '($1) $2')
-          .replace(/(\d{4})(\d{1,4})/, '$1-$2');
-      } else {
-        return cleanValue
-          .replace(/(\d{2})(\d)/, '($1) $2')
-          .replace(/(\d{5})(\d{1,4})/, '$1-$2');
-      }
-    }
-    return cleanValue;
-  };
-
-  const formatRG = (value) => {
-    // Remove tudo que não é número ou X
-    const cleanValue = value.replace(/[^0-9Xx]/g, '').toUpperCase();
-    if (cleanValue.length <= 9) {
-      return cleanValue
-        .replace(/(\d{2})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1})/, '$1-$2');
-    }
-    return cleanValue;
-  };
-
-  const formatIE = (value) => {
-    // Para IE, apenas números com formatação básica
-    const cleanValue = value.replace(/[^0-9]/g, '');
-    if (cleanValue.length <= 15) {
-      // Formatação genérica para IE (pode variar por estado)
-      return cleanValue
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,3})/, '$1-$2');
-    }
-    return cleanValue;
-  };
-  // Função para validar CPF/CNPJ em tempo real
-  const validarCpfCnpjEmTempoReal = (valor, tipo) => {
-    if (!valor) return { isValid: true, message: '' };
-    
-    const valorLimpo = valor.replace(/\D/g, '');
-    const isCpf = tipo === 'FISICA';
-    const tamanhoEsperado = isCpf ? 11 : 14;
-    
-    // Se ainda não tem o tamanho completo, não mostra erro
-    if (valorLimpo.length < tamanhoEsperado) {
-      return { isValid: true, message: '' };
-    }
-    
-    // Se tem o tamanho esperado, valida
-    if (valorLimpo.length === tamanhoEsperado) {
-      const isDocumentoValido = isCpf ? validarCPF(valorLimpo) : validarCNPJ(valorLimpo);
-      if (!isDocumentoValido) {
-        return { 
-          isValid: false, 
-          message: `${isCpf ? 'CPF' : 'CNPJ'} inválido` 
-        };
-      }
-      return { isValid: true, message: '' };
-    }
-    
-    // Se tem mais dígitos que o esperado
-    return { 
-      isValid: false, 
-      message: `${isCpf ? 'CPF' : 'CNPJ'} deve ter ${tamanhoEsperado} dígitos` 
-    };
-  };
+  };  // As funções de formatação de CPF e CNPJ foram movidas para utils/documentValidation.js
+  // As funções de formatação (CEP, Telefone, RG, IE) foram movidas para utils/documentValidation.js// A função validarCpfCnpjEmTempoReal foi movida para utils/documentValidation.js
 
   // Função específica para campos numéricos com máscara
   const handleNumericChange = (e, maxLength, maskFunction) => {
