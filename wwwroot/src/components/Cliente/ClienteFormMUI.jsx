@@ -334,7 +334,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
     
     // Validando campos obrigatórios
     if (!cliente.cidadeId) {
-      setErrorMessage('Por favor, selecione uma cidade.');
+   //   setErrorMessage('Por favor, selecione uma cidade.');
       return;
     }
     

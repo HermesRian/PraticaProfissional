@@ -27,7 +27,11 @@ import {
   Avatar,
   Stack,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import {
   Visibility as VisibilityIcon,
@@ -37,7 +41,9 @@ import {
   Search as SearchIcon,
   Person as PersonIcon,
   Business as BusinessIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  Block as BlockIcon,
+  CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 import { formatCPF, formatCNPJ, formatCEP, formatTelefone, censurarCPF, censurarCNPJ } from '../../utils/documentValidation';
 
@@ -51,6 +57,7 @@ const ClienteListMUI = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [mostrarDocumentoCompleto, setMostrarDocumentoCompleto] = useState(false);
+  const [filtroStatus, setFiltroStatus] = useState('todos'); // 'todos', 'ativos', 'inativos'
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -113,16 +120,26 @@ const ClienteListMUI = () => {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
+    const cliente = clientes.find(c => c.id === id);
+    const isAtivo = cliente?.ativo;
+    const acao = isAtivo ? 'inativar' : 'ativar';
+    const mensagem = isAtivo ? 
+      'Tem certeza que deseja inativar este cliente?' : 
+      'Tem certeza que deseja ativar este cliente?';
+    
+    if (window.confirm(mensagem)) {
       fetch(`http://localhost:8080/clientes/${id}`, {
         method: 'DELETE',
       })
         .then(() => {
-          setClientes(clientes.filter((cliente) => cliente.id !== id));
+          // Atualiza o status do cliente na lista local
+          setClientes(clientes.map(cliente => 
+            cliente.id === id ? { ...cliente, ativo: !cliente.ativo } : cliente
+          ));
         })
         .catch((error) => {
-          console.error('Erro ao excluir cliente:', error);
-          setError('Erro ao excluir cliente');
+          console.error(`Erro ao ${acao} cliente:`, error);
+          setError(`Erro ao ${acao} cliente`);
         });
     }
   };
@@ -157,13 +174,21 @@ const ClienteListMUI = () => {
     setClienteSelecionado(null);
     setIsModalOpen(false);
   };
-  const clientesFiltrados = clientes.filter(cliente =>
-    cliente.id?.toString().includes(filtro) ||
-    cliente.nome?.toLowerCase().includes(filtro.toLowerCase()) ||
-    cliente.cnpjCpf?.toLowerCase().includes(filtro.toLowerCase()) ||
-    cliente.email?.toLowerCase().includes(filtro.toLowerCase()) ||
-    getCidadeNome(cliente.cidadeId)?.toLowerCase().includes(filtro.toLowerCase())
-  );
+  const clientesFiltrados = clientes.filter(cliente => {
+    // Filtro por texto (código, nome, CPF/CNPJ, email, cidade)
+    const matchesText = cliente.id?.toString().includes(filtro) ||
+      cliente.nome?.toLowerCase().includes(filtro.toLowerCase()) ||
+      cliente.cnpjCpf?.toLowerCase().includes(filtro.toLowerCase()) ||
+      cliente.email?.toLowerCase().includes(filtro.toLowerCase()) ||
+      getCidadeNome(cliente.cidadeId)?.toLowerCase().includes(filtro.toLowerCase());
+    
+    // Filtro por status
+    const matchesStatus = filtroStatus === 'todos' || 
+      (filtroStatus === 'ativos' && cliente.ativo) ||
+      (filtroStatus === 'inativos' && !cliente.ativo);
+    
+    return matchesText && matchesStatus;
+  });
   // As funções de formatação formatTelefone e formatCEP foram movidas para utils/documentValidation.js
 
   const getTipoLabel = (tipo) => {
@@ -225,9 +250,9 @@ const ClienteListMUI = () => {
           alignItems: 'center', 
           mb: 3,
           gap: 2,
-          flexWrap: { xs: 'wrap', sm: 'nowrap' }
+          flexWrap: { xs: 'wrap', md: 'nowrap' }
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
             <TextField
               variant="outlined"
               placeholder="Pesquisar por código, nome, CPF/CNPJ, email..."
@@ -241,7 +266,7 @@ const ClienteListMUI = () => {
                 ),
               }}
               sx={{ 
-                width: { xs: '100%', sm: 350 },
+                width: { xs: '100%', sm: 300 },
                 '& .MuiOutlinedInput-root': {
                   height: 40,
                   '& fieldset': {
@@ -256,6 +281,19 @@ const ClienteListMUI = () => {
                 }
               }}
             />
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={filtroStatus}
+                onChange={(e) => setFiltroStatus(e.target.value)}
+                label="Status"
+                sx={{ height: 40 }}
+              >
+                <MenuItem value="todos">Todos</MenuItem>
+                <MenuItem value="ativos">Ativos</MenuItem>
+                <MenuItem value="inativos">Inativos</MenuItem>
+              </Select>
+            </FormControl>
             <FormControlLabel
               control={
                 <Switch 
@@ -265,7 +303,7 @@ const ClienteListMUI = () => {
                   size="small"
                 />
               }
-              label={<Typography variant="body2">Exibir documentos completos</Typography>}
+              label={<Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>Exibir documentos completos</Typography>}
             />
           </Box>
           <Button
@@ -294,6 +332,13 @@ const ClienteListMUI = () => {
         )}
 
         {/* Tabela */}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            Exibindo {clientesFiltrados.length} de {clientes.length} clientes
+            {filtroStatus !== 'todos' && ` (${filtroStatus})`}
+          </Typography>
+        </Box>
+        
         <TableContainer>
           <Table>            <TableHead>
               <TableRow sx={{ bgcolor: '#f5f5f5' }}>
@@ -456,13 +501,13 @@ const ClienteListMUI = () => {
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Excluir">
+                      <Tooltip title={cliente.ativo ? "Inativar" : "Ativar"}>
                         <IconButton
                           size="small"
                           onClick={() => handleDelete(cliente.id)}
-                          sx={{ color: '#dc3545' }}
+                          sx={{ color: cliente.ativo ? '#dc3545' : '#28a745' }}
                         >
-                          <DeleteIcon fontSize="small" />
+                          {cliente.ativo ? <BlockIcon fontSize="small" /> : <CheckCircleIcon fontSize="small" />}
                         </IconButton>
                       </Tooltip>
                     </Box>
@@ -476,8 +521,16 @@ const ClienteListMUI = () => {
         {clientesFiltrados.length === 0 && (
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="h6" color="text.secondary">
-              Nenhum cliente encontrado
+              {clientes.length === 0 
+                ? 'Nenhum cliente cadastrado' 
+                : `Nenhum cliente ${filtroStatus === 'todos' ? '' : filtroStatus === 'ativos' ? 'ativo' : 'inativo'} encontrado`
+              }
             </Typography>
+            {filtro && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Termo pesquisado: "{filtro}"
+              </Typography>
+            )}
           </Box>
         )}
       </Paper>      {/* Modal de Visualização */}

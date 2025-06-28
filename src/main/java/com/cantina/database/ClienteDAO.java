@@ -248,7 +248,7 @@ public class ClienteDAO {
     }
 
     public void excluir(Long id) {
-        String sql = "DELETE FROM cliente WHERE id = ?";
+        String sql = "UPDATE cliente SET ativo = false, ultima_modificacao = NOW() WHERE id = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
