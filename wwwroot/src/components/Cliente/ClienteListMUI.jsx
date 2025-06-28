@@ -736,7 +736,6 @@ const ClienteListMUI = () => {
                   ) : ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
-                  helperText="Versão completa do documento (somente visível no modal)"
                 />
               </Grid>
 

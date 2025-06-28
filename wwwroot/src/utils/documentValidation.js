@@ -4,20 +4,15 @@
  * @returns {boolean} - true se o CPF for válido, false caso contrário
  */
 export const validarCPF = (cpf) => {
-  // Remove caracteres não numéricos
   const cpfLimpo = cpf.replace(/\D/g, '');
   
-  // Verifica se tem 11 dígitos
   if (cpfLimpo.length !== 11) return false;
   
-  // Verifica se todos os dígitos são iguais
   if (/^(\d)\1{10}$/.test(cpfLimpo)) return false;
   
-  // Validação dos dígitos verificadores
   let soma = 0;
   let resto;
   
-  // Primeiro dígito verificador
   for (let i = 1; i <= 9; i++) {
     soma += parseInt(cpfLimpo.substring(i - 1, i)) * (11 - i);
   }
@@ -25,7 +20,6 @@ export const validarCPF = (cpf) => {
   if (resto === 10 || resto === 11) resto = 0;
   if (resto !== parseInt(cpfLimpo.substring(9, 10))) return false;
   
-  // Segundo dígito verificador
   soma = 0;
   for (let i = 1; i <= 10; i++) {
     soma += parseInt(cpfLimpo.substring(i - 1, i)) * (12 - i);
@@ -43,23 +37,18 @@ export const validarCPF = (cpf) => {
  * @returns {boolean} - true se o CNPJ for válido, false caso contrário
  */
 export const validarCNPJ = (cnpj) => {
-  // Remove caracteres não numéricos
   const cnpjLimpo = cnpj.replace(/\D/g, '');
   
-  // Verifica se tem 14 dígitos
   if (cnpjLimpo.length !== 14) return false;
   
-  // Verifica se todos os dígitos são iguais
   if (/^(\d)\1{13}$/.test(cnpjLimpo)) return false;
   
-  // Validação dos dígitos verificadores
   let tamanho = cnpjLimpo.length - 2;
   let numeros = cnpjLimpo.substring(0, tamanho);
   let digitos = cnpjLimpo.substring(tamanho);
   let soma = 0;
   let pos = tamanho - 7;
   
-  // Primeiro dígito verificador
   for (let i = tamanho; i >= 1; i--) {
     soma += numeros.charAt(tamanho - i) * pos--;
     if (pos < 2) pos = 9;
@@ -68,7 +57,6 @@ export const validarCNPJ = (cnpj) => {
   let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
   if (resultado !== parseInt(digitos.charAt(0))) return false;
   
-  // Segundo dígito verificador
   tamanho = tamanho + 1;
   numeros = cnpjLimpo.substring(0, tamanho);
   soma = 0;
@@ -98,12 +86,10 @@ export const validarCpfCnpjEmTempoReal = (valor, tipo) => {
   const isCpf = tipo === 'FISICA';
   const tamanhoEsperado = isCpf ? 11 : 14;
   
-  // Se ainda não tem o tamanho completo, não mostra erro
   if (valorLimpo.length < tamanhoEsperado) {
     return { isValid: true, message: '' };
   }
   
-  // Se tem o tamanho esperado, valida
   if (valorLimpo.length === tamanhoEsperado) {
     const isDocumentoValido = isCpf ? validarCPF(valorLimpo) : validarCNPJ(valorLimpo);
     if (!isDocumentoValido) {
@@ -115,7 +101,6 @@ export const validarCpfCnpjEmTempoReal = (valor, tipo) => {
     return { isValid: true, message: '' };
   }
   
-  // Se tem mais dígitos que o esperado
   return { 
     isValid: false, 
     message: `${isCpf ? 'CPF' : 'CNPJ'} deve ter ${tamanhoEsperado} dígitos` 
@@ -195,7 +180,6 @@ export const formatTelefone = (value) => {
  * @returns {string} - RG formatado (xx.xxx.xxx-x)
  */
 export const formatRG = (value) => {
-  // Remove tudo que não é número ou X
   const cleanValue = value.replace(/[^0-9Xx]/g, '').toUpperCase();
   if (cleanValue.length <= 9) {
     return cleanValue
@@ -212,10 +196,8 @@ export const formatRG = (value) => {
  * @returns {string} - IE formatada (genérica)
  */
 export const formatIE = (value) => {
-  // Para IE, apenas números com formatação básica
   const cleanValue = value.replace(/[^0-9]/g, '');
   if (cleanValue.length <= 15) {
-    // Formatação genérica para IE (pode variar por estado)
     return cleanValue
       .replace(/(\d{3})(\d)/, '$1.$2')
       .replace(/(\d{3})(\d)/, '$1.$2')
@@ -234,7 +216,6 @@ export const censurarCPF = (value) => {
   const cleanValue = value.replace(/[^0-9]/g, '');
   if (cleanValue.length !== 11) return formatCPF(cleanValue);
   
-  // Mostra apenas os 3 primeiros e 2 últimos dígitos
   return `${cleanValue.substring(0, 3)}.***.***-${cleanValue.substring(9, 11)}`;
 };
 
@@ -248,6 +229,5 @@ export const censurarCNPJ = (value) => {
   const cleanValue = value.replace(/[^0-9]/g, '');
   if (cleanValue.length !== 14) return formatCNPJ(cleanValue);
   
-  // Mostra apenas os 2 primeiros e 4 últimos dígitos
   return `${cleanValue.substring(0, 2)}.***.***/****-${cleanValue.substring(10, 14)}`;
 };
