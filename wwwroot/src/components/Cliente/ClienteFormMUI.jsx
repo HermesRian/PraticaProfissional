@@ -356,7 +356,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
           ...prev,
           cnpjCpf: `O ${isCpf ? 'CPF' : 'CNPJ'} deve ter exatamente ${tamanhoEsperado} dígitos.`
         }));
-        setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
+        //setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
         return;
       }
       
@@ -368,7 +368,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
           ...prev,
           cnpjCpf: `${isCpf ? 'CPF' : 'CNPJ'} inválido. Verifique os dígitos informados.`
         }));
-        setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
+      //  setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
         return;
       }
     }
@@ -376,7 +376,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
     // Validação do CEP
     const cepSemMascara = cliente.cep?.replace(/\D/g, '') || '';
     if (cepSemMascara.length !== 0 && cepSemMascara.length !== 8) {
-      setErrorMessage('O CEP deve ter exatamente 8 dígitos.');
+      //setErrorMessage('O CEP deve ter exatamente 8 dígitos.');
       return;
     }    // Formatando os dados para corresponder ao modelo esperado pelo backend
     const clienteFormatado = {
@@ -565,7 +565,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
           </Box>
         </Box>
 
-        {/* Linha 1: Código, Tipo de Pessoa, Nome, Apelido, Estado Civil */}
+        {/* Linha 1: Código, Tipo de Pessoa, Cliente, Apelido, Estado Civil */}
 
         <Grid container spacing={2} alignItems="center" sx={{ mb: 4 }}>
           <Grid item sx={{ width: '6%', minWidth: 80 }}>
@@ -601,11 +601,11 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               fullWidth
               required
               size="small"
-              label="Nome"
+              label="Cliente"
               name="nome"
               value={cliente.nome}
               onChange={handleChange}
-              placeholder="Nome completo"
+              placeholder="Nome do cliente"
               variant="outlined"
               error={!!fieldErrors.nome}
               helperText={fieldErrors.nome || ''}

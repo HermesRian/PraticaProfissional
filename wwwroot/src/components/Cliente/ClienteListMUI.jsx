@@ -314,7 +314,7 @@ const ClienteListMUI = () => {
                     onClick={() => handleSort('nome')}
                     sx={{ fontWeight: 600 }}
                   >
-                    Nome
+                    Cliente
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>
@@ -565,7 +565,7 @@ const ClienteListMUI = () => {
                 <TextField
                   fullWidth
                   size="small"
-                  label="Nome"
+                  label="Cliente"
                   value={clienteSelecionado.nome || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
