@@ -268,18 +268,18 @@ const CidadeFormModal = ({ onClose }) => {
         </Paper>
       </DialogContent>      <DialogActions sx={{ p: 3, bgcolor: '#ffffff' }}>
         <Button
-          onClick={onClose}
-          variant="outlined"
-          color="inherit"
-        >
-          Cancelar        </Button>
-        <Button
           onClick={handleSubmit}
           variant="contained"
           color="primary"
         >
           Salvar
         </Button>
+        <Button
+          onClick={onClose}
+          variant="outlined"
+          color="inherit"
+        >
+          Cancelar        </Button>
       </DialogActions>
 
       {/* Modal de seleção de estados */}

@@ -282,19 +282,19 @@ const EstadoFormModal = ({ open, onClose, onSuccess, estado = null }) => {
 
         <DialogActions sx={{ p: 3, bgcolor: '#ffffff' }}>
           <Button
-            onClick={onClose}
-            variant="outlined"
-            color="inherit"
-          >
-            Cancelar
-          </Button>
-          <Button
             onClick={handleSubmit}
             variant="contained"
             color="primary"
             disabled={loading}
           >
             {loading ? 'Salvando...' : 'Salvar'}
+          </Button>
+          <Button
+            onClick={onClose}
+            variant="outlined"
+            color="inherit"
+          >
+            Cancelar
           </Button>
         </DialogActions>
       </Dialog>

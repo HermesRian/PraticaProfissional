@@ -982,6 +982,15 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
           {/* Botões - lado direito */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
+              variant="contained"
+              type="submit"
+              color="primary"
+              size="medium"
+              sx={{ minWidth: 100, py: 1 }}
+            >
+              Salvar
+            </Button>
+            <Button
               variant="outlined"
               onClick={handleCancel}
               color="inherit"
@@ -990,15 +999,6 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               sx={{ minWidth: 100, py: 1 }}
             >
               Cancelar
-            </Button>
-            <Button
-              variant="contained"
-              type="submit"
-              color="primary"
-              size="medium"
-              sx={{ minWidth: 100, py: 1 }}
-            >
-              Salvar
             </Button>
           </Box>
         </Box>
