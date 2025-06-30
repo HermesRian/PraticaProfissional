@@ -137,7 +137,7 @@ const FormaPagamentoListMUI = () => {
   };
 
   const formasPagamentoFiltradas = formasPagamento.filter(forma => {
-    // Filtro por texto (sigla, descrição, tipo)
+    // Filtro por texto (descrição)
     const matchesText = forma.id?.toString().includes(filtro) ||
       forma.descricao?.toLowerCase().includes(filtro.toLowerCase()) ||
       forma.codigo?.toLowerCase().includes(filtro.toLowerCase()) ||
@@ -150,20 +150,6 @@ const FormaPagamentoListMUI = () => {
     
     return matchesText && matchesStatus;
   });
-
-  const getTipoLabel = (tipo) => {
-    switch (tipo) {
-      case 'DINHEIRO': return 'Dinheiro';
-      case 'CARTAO_DEBITO': return 'Cartão de Débito';
-      case 'CARTAO_CREDITO': return 'Cartão de Crédito';
-      case 'PIX': return 'PIX';
-      case 'TRANSFERENCIA': return 'Transferência';
-      case 'BOLETO': return 'Boleto';
-      case 'CHEQUE': return 'Cheque';
-      case 'OUTRO': return 'Outro';
-      default: return tipo || 'Não informado';
-    }
-  };
 
   if (loading) {
     return (
@@ -202,7 +188,7 @@ const FormaPagamentoListMUI = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
             <TextField
               variant="outlined"
-              placeholder="Pesquisar por campos"
+              placeholder="Pesquisar por descrição..."
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
               InputProps={{
@@ -291,32 +277,12 @@ const FormaPagamentoListMUI = () => {
                 </TableCell>
                 <TableCell>
                   <TableSortLabel
-                    active={sortConfig.key === 'codigo'}
-                    direction={sortConfig.direction}
-                    onClick={() => handleSort('codigo')}
-                    sx={{ fontWeight: 600 }}
-                  >
-                    Sigla
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
                     active={sortConfig.key === 'descricao'}
                     direction={sortConfig.direction}
                     onClick={() => handleSort('descricao')}
                     sx={{ fontWeight: 600 }}
                   >
-                    Descrição
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortConfig.key === 'tipo'}
-                    direction={sortConfig.direction}
-                    onClick={() => handleSort('tipo')}
-                    sx={{ fontWeight: 600 }}
-                  >
-                    Tipo
+                    Forma de Pagamento
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>
@@ -345,11 +311,6 @@ const FormaPagamentoListMUI = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" fontWeight={500}>
-                      {forma.codigo}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Avatar sx={{ width: 32, height: 32, bgcolor: '#1976d2' }}>
                         <PaymentIcon fontSize="small" />
@@ -358,14 +319,6 @@ const FormaPagamentoListMUI = () => {
                         {forma.descricao}
                       </Typography>
                     </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={getTipoLabel(forma.tipo)}
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -490,23 +443,12 @@ const FormaPagamentoListMUI = () => {
 
             {/* Dados da forma de pagamento */}
             <Grid container spacing={2} alignItems="center" sx={{ mb: 4 }}>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={6}>
                 <TextField
                   fullWidth
                   size="small"
                   label="Código"
                   value={formaPagamentoSelecionada.id || ''}
-                  InputProps={{ readOnly: true }}
-                  variant="outlined"
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Sigla"
-                  value={formaPagamentoSelecionada.codigo || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -518,17 +460,6 @@ const FormaPagamentoListMUI = () => {
                   size="small"
                   label="Descrição"
                   value={formaPagamentoSelecionada.descricao || ''}
-                  InputProps={{ readOnly: true }}
-                  variant="outlined"
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={12}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Tipo"
-                  value={getTipoLabel(formaPagamentoSelecionada.tipo)}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />

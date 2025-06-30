@@ -10,15 +10,7 @@ import {
   Grid,
   Switch,
   FormControlLabel,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  Radio,
-  Select,
-  MenuItem,
-  InputLabel,
   Paper,
-  Divider,
   Alert,
   Stack
 } from '@mui/material';
@@ -27,8 +19,6 @@ import {
 const FormaPagamentoForm = () => {
   const [formaPagamento, setFormaPagamento] = useState({
     descricao: '',
-    codigo: '', // Este será tratado como "Sigla"
-    tipo: 'DINHEIRO', // Padrão: dinheiro
     ativo: true,
     dataCadastro: '',
     ultimaModificacao: '',
@@ -86,14 +76,6 @@ const FormaPagamentoForm = () => {
     
     if (!formaPagamento.descricao?.trim()) {
       errors.descricao = 'Este campo é obrigatório';
-    }
-    
-    if (!formaPagamento.codigo?.trim()) {
-      errors.codigo = 'Este campo é obrigatório';
-    }
-    
-    if (!formaPagamento.tipo?.trim()) {
-      errors.tipo = 'Este campo é obrigatório';
     }
     
     // Se há erros, exibe e para a execução
@@ -211,7 +193,7 @@ const FormaPagamentoForm = () => {
           </Box>
         </Box>
 
-        {/* Linha 1: Código, Sigla, Descrição, Tipo */}
+        {/* Linha 1: Código, Descrição */}
         <Grid container spacing={2} alignItems="center" sx={{ mb: 4 }}>
           <Grid item sx={{ width: '6%', minWidth: 80 }}>
             <TextField
@@ -226,23 +208,7 @@ const FormaPagamentoForm = () => {
             />
           </Grid>
 
-          <Grid item sx={{ width: '12%', minWidth: 100 }}>
-            <TextField
-              fullWidth
-              required
-              size="small"
-              label="Sigla"
-              name="codigo"
-              value={formaPagamento.codigo}
-              onChange={handleChange}
-              placeholder="Sigla"
-              variant="outlined"
-              error={!!fieldErrors.codigo}
-              helperText={fieldErrors.codigo || ''}
-            />
-          </Grid>
-
-          <Grid item sx={{ width: '46%' }}>
+          <Grid item sx={{ width: '75%' }}>
             <TextField
               fullWidth
               required
@@ -256,37 +222,6 @@ const FormaPagamentoForm = () => {
               error={!!fieldErrors.descricao}
               helperText={fieldErrors.descricao || ''}
             />
-          </Grid>
-
-          <Grid item sx={{ width: '20%', minWidth: 180 }}>
-            <FormControl fullWidth size="small" required error={!!fieldErrors.tipo}>
-              <InputLabel>Tipo</InputLabel>
-              <Select
-                name="tipo"
-                value={formaPagamento.tipo}
-                onChange={handleChange}
-                label="Tipo"
-              >
-                <MenuItem value="">Selecione...</MenuItem>
-                <MenuItem value="DINHEIRO">Dinheiro</MenuItem>
-                <MenuItem value="CARTAO_DEBITO">Cartão de Débito</MenuItem>
-                <MenuItem value="CARTAO_CREDITO">Cartão de Crédito</MenuItem>
-                <MenuItem value="PIX">PIX</MenuItem>
-                <MenuItem value="TRANSFERENCIA">Transferência</MenuItem>
-                <MenuItem value="BOLETO">Boleto</MenuItem>
-                <MenuItem value="CHEQUE">Cheque</MenuItem>
-                <MenuItem value="OUTRO">Outro</MenuItem>
-              </Select>
-              {fieldErrors.tipo && (
-                <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>
-                  {fieldErrors.tipo}
-                </Typography>
-              )}
-            </FormControl>
-          </Grid>
-
-          <Grid item sx={{ width: '16%', minWidth: 120 }}>
-            {/* Espaço vazio para manter alinhamento - o switch está no cabeçalho */}
           </Grid>
         </Grid>
 
