@@ -18,8 +18,8 @@ import FuncaoFuncionarioForm from '../FuncaoFuncionario/FuncaoFuncionarioFormMUI
 import CondicaoPagamentoList from '../CondicaoPagamento/CondicaoPagamentoList';
 import CondicaoPagamentoForm from '../CondicaoPagamento/CondicaoPagamentoForm';
 
-import FormaPagamentoList from '../FormaPagamento/FormaPagamentoList';
-import FormaPagamentoForm from '../FormaPagamento/FormaPagamentoForm';
+import FormaPagamentoList from '../FormaPagamento/FormaPagamentoListMUI';
+import FormaPagamentoForm from '../FormaPagamento/FormaPagamentoFormMUI';
 
 import ProdutoList from '../Produto/ProdutoList';
 import ProdutoForm from '../Produto/ProdutoForm';
