@@ -1,10 +1,13 @@
 package com.cantina.entities;
 
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+
 public class Fornecedor {
     private Long id;
     private String razaoSocial;
     private String nomeFantasia;
-    private String cnpj;
+    private String cpfCnpj;
     private String email;
     private String telefone;
     private String endereco;
@@ -13,8 +16,12 @@ public class Fornecedor {
     private String bairro;
     private String cep;
     private Long cidadeId;
-    private String inscricaoEstadual;
+    private String rgInscricaoEstadual;
     private Boolean ativo;
+    private Long condicaoPagamentoId;
+    private BigDecimal limiteCredito;
+    private Timestamp dataCriacao;
+    private Timestamp dataAlteracao;
 
     public Long getId() {
         return id;
@@ -40,12 +47,12 @@ public class Fornecedor {
         this.nomeFantasia = nomeFantasia;
     }
 
-    public String getCnpj() {
-        return cnpj;
+    public String getCpfCnpj() {
+        return cpfCnpj;
     }
 
-    public void setCnpj(String cnpj) {
-        this.cnpj = cnpj;
+    public void setCpfCnpj(String cpfCnpj) {
+        this.cpfCnpj = cpfCnpj;
     }
 
     public String getEmail() {
@@ -112,12 +119,12 @@ public class Fornecedor {
         this.cidadeId = cidadeId;
     }
 
-    public String getInscricaoEstadual() {
-        return inscricaoEstadual;
+    public String getRgInscricaoEstadual() {
+        return rgInscricaoEstadual;
     }
 
-    public void setInscricaoEstadual(String inscricaoEstadual) {
-        this.inscricaoEstadual = inscricaoEstadual;
+    public void setRgInscricaoEstadual(String rgInscricaoEstadual) {
+        this.rgInscricaoEstadual = rgInscricaoEstadual;
     }
 
     public Boolean getAtivo() {
@@ -126,5 +133,37 @@ public class Fornecedor {
 
     public void setAtivo(Boolean ativo) {
         this.ativo = ativo;
+    }
+
+    public Long getCondicaoPagamentoId() {
+        return condicaoPagamentoId;
+    }
+
+    public void setCondicaoPagamentoId(Long condicaoPagamentoId) {
+        this.condicaoPagamentoId = condicaoPagamentoId;
+    }
+
+    public BigDecimal getLimiteCredito() {
+        return limiteCredito;
+    }
+
+    public void setLimiteCredito(BigDecimal limiteCredito) {
+        this.limiteCredito = limiteCredito;
+    }
+
+    public Timestamp getDataCriacao() {
+        return dataCriacao;
+    }
+
+    public void setDataCriacao(Timestamp dataCriacao) {
+        this.dataCriacao = dataCriacao;
+    }
+
+    public Timestamp getDataAlteracao() {
+        return dataAlteracao;
+    }
+
+    public void setDataAlteracao(Timestamp dataAlteracao) {
+        this.dataAlteracao = dataAlteracao;
     }
 }

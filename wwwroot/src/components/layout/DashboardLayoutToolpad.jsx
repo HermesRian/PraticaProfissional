@@ -53,6 +53,11 @@
       icon: <WorkIcon />,
     },
     {
+      segment: 'funcoes-funcionario',
+      title: 'Cargos',
+      icon: <WorkIcon />,
+    },
+    {
       kind: 'divider',
     },
     {

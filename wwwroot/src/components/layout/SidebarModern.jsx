@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import {
+/*
   Drawer,
   List,
   ListItem,
@@ -15,7 +14,6 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import {
   People as PeopleIcon,
   Business as BusinessIcon,
   Work as WorkIcon,
@@ -31,7 +29,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from '@mui/icons-material';
-import { Link, useLocation } from 'react-router-dom';
 
 const drawerWidth = 280;
 const collapsedWidth = 56;
@@ -305,3 +302,4 @@ const SidebarModern = ({ open, onToggle }) => {
 };
 
 export default SidebarModern;
+*/

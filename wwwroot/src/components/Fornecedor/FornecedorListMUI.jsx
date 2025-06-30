@@ -40,19 +40,19 @@ import {
   Add as AddIcon,
   Search as SearchIcon,
   Person as PersonIcon,
+  Business as BusinessIcon,
   Close as CloseIcon,
   Block as BlockIcon,
   CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
-import { formatCPF, formatCEP, formatTelefone, censurarCPF } from '../../utils/documentValidation';
+import { formatCPF, formatCNPJ, formatCEP, formatTelefone, censurarCPF, censurarCNPJ } from '../../utils/documentValidation';
 
-const FuncionarioListMUI = () => {
-  const [funcionarios, setFuncionarios] = useState([]);
+const FornecedorListMUI = () => {
+  const [fornecedores, setFornecedores] = useState([]);
   const [cidades, setCidades] = useState([]);
-  const [cargos, setCargos] = useState([]);
-  const [funcionarioSelecionado, setFuncionarioSelecionado] = useState(null);
+  const [fornecedorSelecionado, setFornecedorSelecionado] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [sortConfig, setSortConfig] = useState({ key: 'nome', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'razaoSocial', direction: 'asc' });
   const [filtro, setFiltro] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -62,14 +62,12 @@ const FuncionarioListMUI = () => {
 
   useEffect(() => {
     Promise.all([
-      fetch('http://localhost:8080/funcionarios').then(res => res.json()),
-      fetch('http://localhost:8080/cidades').then(res => res.json()),
-      fetch('http://localhost:8080/funcoes-funcionario').then(res => res.json())
+      fetch('http://localhost:8080/fornecedores').then(res => res.json()),
+      fetch('http://localhost:8080/cidades').then(res => res.json())
     ])
-    .then(([funcionariosData, cidadesData, cargosData]) => {
-      setFuncionarios(funcionariosData);
+    .then(([fornecedoresData, cidadesData]) => {
+      setFornecedores(fornecedoresData);
       setCidades(cidadesData);
-      setCargos(cargosData);
       setLoading(false);
     })
     .catch((error) => {
@@ -84,11 +82,6 @@ const FuncionarioListMUI = () => {
     return cidade ? cidade.nome : 'Não informada';
   };
 
-  const getCargoNome = (cargoId) => {
-    const cargo = cargos.find((c) => c.id === cargoId);
-    return cargo ? cargo.nome : 'Não informado';
-  };
-
   const handleSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -96,7 +89,7 @@ const FuncionarioListMUI = () => {
     }
     setSortConfig({ key, direction });
 
-    const sortedFuncionarios = [...funcionarios].sort((a, b) => {
+    const sortedFornecedores = [...fornecedores].sort((a, b) => {
       let aValue = a[key];
       let bValue = b[key];
 
@@ -123,59 +116,88 @@ const FuncionarioListMUI = () => {
       }
       return 0;
     });
-    setFuncionarios(sortedFuncionarios);
+    setFornecedores(sortedFornecedores);
   };
 
   const handleDelete = (id) => {
-    const funcionario = funcionarios.find(f => f.id === id);
-    const isAtivo = funcionario?.ativo;
+    const fornecedor = fornecedores.find(f => f.id === id);
+    const isAtivo = fornecedor?.ativo;
     const acao = isAtivo ? 'excluir' : 'ativar';
     const mensagem = isAtivo ? 
-      'Tem certeza que deseja excluir este funcionário?' : 
-      'Tem certeza que deseja ativar este funcionário?';
+      'Tem certeza que deseja excluir este fornecedor?' : 
+      'Tem certeza que deseja ativar este fornecedor?';
     
     if (window.confirm(mensagem)) {
-      fetch(`http://localhost:8080/funcionarios/${id}`, {
+      fetch(`http://localhost:8080/fornecedores/${id}`, {
         method: 'DELETE',
       })
         .then(() => {
-          // Atualiza o status do funcionário na lista local
-          setFuncionarios(funcionarios.map(funcionario => 
-            funcionario.id === id ? { ...funcionario, ativo: !funcionario.ativo } : funcionario
+          // Atualiza o status do fornecedor na lista local
+          setFornecedores(fornecedores.map(fornecedor => 
+            fornecedor.id === id ? { ...fornecedor, ativo: !fornecedor.ativo } : fornecedor
           ));
         })
         .catch((error) => {
-          console.error(`Erro ao ${acao} funcionário:`, error);
-          setError(`Erro ao ${acao} funcionário`);
+          console.error(`Erro ao ${acao} fornecedor:`, error);
+          setError(`Erro ao ${acao} fornecedor`);
         });
     }
   };
 
-  const handleView = async (funcionario) => {
-    setFuncionarioSelecionado(funcionario);
+  const handleView = async (fornecedor) => {
+    // Buscar descrição da condição de pagamento se condicaoPagamentoId estiver presente
+    let fornecedorComCondicaoPagamento = { ...fornecedor };
+    
+    if (fornecedor.condicaoPagamentoId) {
+      try {
+        console.log('Buscando condição de pagamento com ID:', fornecedor.condicaoPagamentoId);
+        const condicaoResponse = await fetch(`http://localhost:8080/condicoes-pagamento/${fornecedor.condicaoPagamentoId}`);
+        
+        if (condicaoResponse.ok) {
+          const condicaoData = await condicaoResponse.json();
+          fornecedorComCondicaoPagamento.condicaoPagamentoDescricao = condicaoData.descricao || '';
+          console.log('Descrição da condição de pagamento encontrada:', condicaoData.descricao);
+        } else {
+          console.error('Erro ao buscar condição de pagamento, status:', condicaoResponse.status);
+          fornecedorComCondicaoPagamento.condicaoPagamentoDescricao = 'Erro ao carregar';
+        }
+      } catch (error) {
+        console.error('Erro ao buscar condição de pagamento:', error);
+        fornecedorComCondicaoPagamento.condicaoPagamentoDescricao = 'Erro ao carregar';
+      }
+    }
+    
+    setFornecedorSelecionado(fornecedorComCondicaoPagamento);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
-    setFuncionarioSelecionado(null);
+    setFornecedorSelecionado(null);
     setIsModalOpen(false);
   };
 
-  const funcionariosFiltrados = funcionarios.filter(funcionario => {
-    // Filtro por texto (código, nome, CPF, email, cidade)
-    const matchesText = funcionario.id?.toString().includes(filtro) ||
-      funcionario.nome?.toLowerCase().includes(filtro.toLowerCase()) ||
-      funcionario.cpfCnpj?.toLowerCase().includes(filtro.toLowerCase()) ||
-      funcionario.email?.toLowerCase().includes(filtro.toLowerCase()) ||
-      getCidadeNome(funcionario.cidadeId)?.toLowerCase().includes(filtro.toLowerCase());
+  const fornecedoresFiltrados = fornecedores.filter(fornecedor => {
+    // Filtro por texto (código, razão social, CPF/CNPJ, email, cidade)
+    const matchesText = fornecedor.id?.toString().includes(filtro) ||
+      fornecedor.razaoSocial?.toLowerCase().includes(filtro.toLowerCase()) ||
+      fornecedor.cpfCnpj?.toLowerCase().includes(filtro.toLowerCase()) ||
+      fornecedor.email?.toLowerCase().includes(filtro.toLowerCase()) ||
+      getCidadeNome(fornecedor.cidadeId)?.toLowerCase().includes(filtro.toLowerCase());
     
     // Filtro por status
     const matchesStatus = filtroStatus === 'todos' || 
-      (filtroStatus === 'ativos' && funcionario.ativo) ||
-      (filtroStatus === 'inativos' && !funcionario.ativo);
+      (filtroStatus === 'ativos' && fornecedor.ativo) ||
+      (filtroStatus === 'inativos' && !fornecedor.ativo);
     
     return matchesText && matchesStatus;
   });
+
+  const getTipoLabel = (tipo) => {
+    if (typeof tipo === 'number') {
+      return tipo === 0 ? 'Pessoa Física' : 'Pessoa Jurídica';
+    }
+    return tipo === 'FISICA' ? 'Pessoa Física' : 'Pessoa Jurídica';
+  };
 
   const getSexoLabel = (sexo) => {
     switch (sexo) {
@@ -202,7 +224,7 @@ const FuncionarioListMUI = () => {
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-        <Typography>Carregando funcionários...</Typography>
+        <Typography>Carregando fornecedores...</Typography>
       </Box>
     );
   }
@@ -236,7 +258,7 @@ const FuncionarioListMUI = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
             <TextField
               variant="outlined"
-              placeholder="Pesquisar por código, nome, CPF, email..."
+              placeholder="Pesquisar por código, razão social, CPF/CNPJ, email..."
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
               InputProps={{
@@ -289,7 +311,7 @@ const FuncionarioListMUI = () => {
           </Box>
           <Button
             component={Link}
-            to="/funcionarios/cadastrar"
+            to="/fornecedores/cadastrar"
             variant="contained"
             startIcon={<AddIcon />}
             sx={{ 
@@ -315,7 +337,7 @@ const FuncionarioListMUI = () => {
         {/* Tabela */}
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Exibindo {funcionariosFiltrados.length} de {funcionarios.length} funcionários
+            Exibindo {fornecedoresFiltrados.length} de {fornecedores.length} fornecedores
             {filtroStatus !== 'todos' && ` (${filtroStatus})`}
           </Typography>
         </Box>
@@ -336,22 +358,22 @@ const FuncionarioListMUI = () => {
                 </TableCell>
                 <TableCell>
                   <TableSortLabel
-                    active={sortConfig.key === 'nome'}
+                    active={sortConfig.key === 'razaoSocial'}
                     direction={sortConfig.direction}
-                    onClick={() => handleSort('nome')}
+                    onClick={() => handleSort('razaoSocial')}
                     sx={{ fontWeight: 600 }}
                   >
-                    Funcionário
+                    Fornecedor
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>
                   <TableSortLabel
-                    active={sortConfig.key === 'cargo'}
+                    active={sortConfig.key === 'tipo'}
                     direction={sortConfig.direction}
-                    onClick={() => handleSort('cargo')}
+                    onClick={() => handleSort('tipo')}
                     sx={{ fontWeight: 600 }}
                   >
-                    Cargo
+                    Tipo
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>
@@ -361,7 +383,7 @@ const FuncionarioListMUI = () => {
                     onClick={() => handleSort('cpfCnpj')}
                     sx={{ fontWeight: 600 }}
                   >
-                    CPF
+                    CPF/CNPJ
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>
@@ -398,29 +420,32 @@ const FuncionarioListMUI = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {funcionariosFiltrados.map((funcionario) => (
+              {fornecedoresFiltrados.map((fornecedor) => (
                 <TableRow 
-                  key={funcionario.id}
+                  key={fornecedor.id}
                   hover
                   sx={{ '&:hover': { bgcolor: '#f8f9fa' } }}
                 >
                   <TableCell>
                     <Typography variant="body2" fontWeight={500} color="primary">
-                      {funcionario.id}
+                      {fornecedor.id}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Avatar sx={{ width: 32, height: 32, bgcolor: '#1976d2' }}>
-                        <PersonIcon fontSize="small" />
+                        {getTipoLabel(fornecedor.tipo) === 'Pessoa Física' ? 
+                          <PersonIcon fontSize="small" /> : 
+                          <BusinessIcon fontSize="small" />
+                        }
                       </Avatar>
                       <Box>
                         <Typography variant="body2" fontWeight={500}>
-                          {funcionario.nome}
+                          {fornecedor.razaoSocial}
                         </Typography>
-                        {funcionario.apelido && (
+                        {fornecedor.apelido && (
                           <Typography variant="caption" color="text.secondary">
-                            {funcionario.apelido}
+                            {fornecedor.apelido}
                           </Typography>
                         )}
                       </Box>
@@ -428,35 +453,37 @@ const FuncionarioListMUI = () => {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={getCargoNome(funcionario.cargoId)}
+                      label={getTipoLabel(fornecedor.tipo)}
                       size="small"
-                      color="secondary"
+                      color={getTipoLabel(fornecedor.tipo) === 'Pessoa Física' ? 'primary' : 'secondary'}
                       variant="outlined"
                     />
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontFamily="monospace">
-                      {funcionario.cpfCnpj ? (
-                        mostrarDocumentoCompleto ? formatCPF(funcionario.cpfCnpj) : censurarCPF(funcionario.cpfCnpj)
+                      {fornecedor.cpfCnpj ? (
+                        getTipoLabel(fornecedor.tipo) === 'Pessoa Física' ? 
+                        (mostrarDocumentoCompleto ? formatCPF(fornecedor.cpfCnpj) : censurarCPF(fornecedor.cpfCnpj)) : 
+                        (mostrarDocumentoCompleto ? formatCNPJ(fornecedor.cpfCnpj) : censurarCNPJ(fornecedor.cpfCnpj))
                       ) : 'Não informado'}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {funcionario.email || 'Não informado'}
+                      {fornecedor.email || 'Não informado'}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {getCidadeNome(funcionario.cidadeId)}
+                      {getCidadeNome(fornecedor.cidadeId)}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={funcionario.ativo ? 'Ativo' : 'Inativo'}
+                      label={fornecedor.ativo ? 'Ativo' : 'Inativo'}
                       size="small"
-                      color={funcionario.ativo ? 'success' : 'default'}
-                      variant={funcionario.ativo ? 'filled' : 'outlined'}
+                      color={fornecedor.ativo ? 'success' : 'default'}
+                      variant={fornecedor.ativo ? 'filled' : 'outlined'}
                     />
                   </TableCell>
                   <TableCell>
@@ -464,7 +491,7 @@ const FuncionarioListMUI = () => {
                       <Tooltip title="Visualizar">
                         <IconButton
                           size="small"
-                          onClick={() => handleView(funcionario)}
+                          onClick={() => handleView(fornecedor)}
                           sx={{ color: '#17a2b8' }}
                         >
                           <VisibilityIcon fontSize="small" />
@@ -474,19 +501,19 @@ const FuncionarioListMUI = () => {
                         <IconButton
                           size="small"
                           component={Link}
-                          to={`/funcionarios/editar/${funcionario.id}`}
+                          to={`/fornecedores/editar/${fornecedor.id}`}
                           sx={{ color: '#28a745' }}
                         >
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={funcionario.ativo ? "Excluir" : "Ativar"}>
+                      <Tooltip title={fornecedor.ativo ? "Excluir" : "Ativar"}>
                         <IconButton
                           size="small"
-                          onClick={() => handleDelete(funcionario.id)}
-                          sx={{ color: funcionario.ativo ? '#dc3545' : '#28a745' }}
+                          onClick={() => handleDelete(fornecedor.id)}
+                          sx={{ color: fornecedor.ativo ? '#dc3545' : '#28a745' }}
                         >
-                          {funcionario.ativo ? <BlockIcon fontSize="small" /> : <CheckCircleIcon fontSize="small" />}
+                          {fornecedor.ativo ? <BlockIcon fontSize="small" /> : <CheckCircleIcon fontSize="small" />}
                         </IconButton>
                       </Tooltip>
                     </Box>
@@ -497,12 +524,12 @@ const FuncionarioListMUI = () => {
           </Table>
         </TableContainer>
 
-        {funcionariosFiltrados.length === 0 && (
+        {fornecedoresFiltrados.length === 0 && (
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="h6" color="text.secondary">
-              {funcionarios.length === 0 
-                ? 'Nenhum funcionário cadastrado' 
-                : `Nenhum funcionário ${filtroStatus === 'todos' ? '' : filtroStatus === 'ativos' ? 'ativo' : 'inativo'} encontrado`
+              {fornecedores.length === 0 
+                ? 'Nenhum fornecedor cadastrado' 
+                : `Nenhum fornecedor ${filtroStatus === 'todos' ? '' : filtroStatus === 'ativos' ? 'ativo' : 'inativo'} encontrado`
               }
             </Typography>
             {filtro && (
@@ -532,14 +559,14 @@ const FuncionarioListMUI = () => {
           pb: 2
         }}>
           <Typography variant="h6" fontWeight={600}>
-            Visualizar Funcionário
+            Visualizar Fornecedor
           </Typography>
           <IconButton onClick={handleCloseModal} size="small">
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         
-        {funcionarioSelecionado && (
+        {fornecedorSelecionado && (
           <DialogContent sx={{ p: 4 }}>
             {/* Cabeçalho com título e switch Ativo */}
             <Box sx={{ 
@@ -555,13 +582,13 @@ const FuncionarioListMUI = () => {
                 align="center" 
                 sx={{ color: '#333', fontWeight: 600, flex: 1 }}
               >
-                Dados do Funcionário
+                Dados do Fornecedor
               </Typography>
               <Box sx={{ width: 120, display: 'flex', justifyContent: 'flex-end' }}>
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={funcionarioSelecionado.ativo}
+                      checked={fornecedorSelecionado.ativo}
                       disabled
                       color="primary"
                     />
@@ -572,61 +599,74 @@ const FuncionarioListMUI = () => {
               </Box>
             </Box>
 
-            {/* Linha 1: Código, Nome, Apelido, Cargo */}
+            {/* Linha 1: Código, Tipo de Pessoa, Nome, Apelido, Estado Civil */}
             <Grid container spacing={2} alignItems="center" sx={{ mb: 4 }}>
               <Grid item sx={{ width: '6%', minWidth: 80 }}>
                 <TextField
                   fullWidth
                   size="small"
                   label="Código"
-                  value={funcionarioSelecionado.id || ''}
+                  value={fornecedorSelecionado.id || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
 
-              <Grid item sx={{ width: '35%' }}>
+              <Grid item sx={{ width: '16%', minWidth: 140 }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Funcionário"
-                  value={funcionarioSelecionado.nome || ''}
+                  label="Tipo de Pessoa"
+                  value={getTipoLabel(fornecedorSelecionado.tipo)}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
 
-              <Grid item sx={{ width: '15%' }}>
+              <Grid item sx={{ width: '30%' }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Apelido"
-                  value={funcionarioSelecionado.apelido || ''}
+                  label="Fornecedor"
+                  value={fornecedorSelecionado.razaoSocial || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
 
-              <Grid item sx={{ width: '25%' }}>
+              <Grid item sx={{ width: getTipoLabel(fornecedorSelecionado.tipo) === 'Pessoa Física' ? '18%' : '38%' }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Cargo"
-                  value={getCargoNome(funcionarioSelecionado.cargoId)}
+                  label={getTipoLabel(fornecedorSelecionado.tipo) === 'Pessoa Física' ? 'Apelido' : 'Nome Fantasia'}
+                  value={fornecedorSelecionado.apelido || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
+
+              {getTipoLabel(fornecedorSelecionado.tipo) === 'Pessoa Física' && (
+                <Grid item sx={{ width: '20%' }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Estado Civil"
+                    value={getEstadoCivilLabel(fornecedorSelecionado.estadoCivil)}
+                    InputProps={{ readOnly: true }}
+                    variant="outlined"
+                  />
+                </Grid>
+              )}
             </Grid>
 
-            {/* Linha 2: Endereço, Número, Complemento, Bairro, CEP, Cidade */}
+            {/* Linha 2: Rua, Número, Complemento, Bairro, CEP, Cidade */}
             <Grid container spacing={2} sx={{ mb: 4 }}>
               <Grid item sx={{ width: '25%' }}>
                 <TextField
                   fullWidth
                   size="small"
                   label="Endereço"
-                  value={funcionarioSelecionado.endereco || ''}
+                  value={fornecedorSelecionado.endereco || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -637,7 +677,7 @@ const FuncionarioListMUI = () => {
                   fullWidth
                   size="small"
                   label="Número"
-                  value={funcionarioSelecionado.numero || ''}
+                  value={fornecedorSelecionado.numero || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -648,7 +688,7 @@ const FuncionarioListMUI = () => {
                   fullWidth
                   size="small"
                   label="Complemento"
-                  value={funcionarioSelecionado.complemento || ''}
+                  value={fornecedorSelecionado.complemento || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -659,7 +699,7 @@ const FuncionarioListMUI = () => {
                   fullWidth
                   size="small"
                   label="Bairro"
-                  value={funcionarioSelecionado.bairro || ''}
+                  value={fornecedorSelecionado.bairro || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -670,7 +710,7 @@ const FuncionarioListMUI = () => {
                   fullWidth
                   size="small"
                   label="CEP"
-                  value={formatCEP(funcionarioSelecionado.cep) || ''}
+                  value={formatCEP(fornecedorSelecionado.cep) || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -681,21 +721,21 @@ const FuncionarioListMUI = () => {
                   fullWidth
                   size="small"
                   label="Cidade"
-                  value={getCidadeNome(funcionarioSelecionado.cidadeId)}
+                  value={getCidadeNome(fornecedorSelecionado.cidadeId)}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
             </Grid>
 
-            {/* Linha 3: Telefone, Email, Sexo, Data de Nascimento, Estado Civil */}
+            {/* Linha 3: Telefone, Email, Sexo (somente para PF), Data de Nascimento */}
             <Grid container spacing={2} sx={{ mb: 4 }}>
               <Grid item sx={{ width: '15%', minWidth: 150 }}>
                 <TextField
                   fullWidth
                   size="small"
                   label="Telefone"
-                  value={formatTelefone(funcionarioSelecionado.telefone) || ''}
+                  value={formatTelefone(fornecedorSelecionado.telefone) || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -706,57 +746,47 @@ const FuncionarioListMUI = () => {
                   fullWidth
                   size="small"
                   label="Email"
-                  value={funcionarioSelecionado.email || ''}
+                  value={fornecedorSelecionado.email || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
 
-              <Grid item sx={{ width: '10%', minWidth: 120 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Sexo"
-                  value={getSexoLabel(funcionarioSelecionado.sexo)}
-                  InputProps={{ readOnly: true }}
-                  variant="outlined"
-                />
-              </Grid>
-
+              {getTipoLabel(fornecedorSelecionado.tipo) === 'Pessoa Física' && (
+                <Grid item sx={{ width: '10%', minWidth: 120 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Sexo"
+                    value={getSexoLabel(fornecedorSelecionado.sexo)}
+                    InputProps={{ readOnly: true }}
+                    variant="outlined"
+                  />
+                </Grid>
+              )}
               <Grid item sx={{ width: '15%', minWidth: 150 }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Data de Nascimento"
-                  value={funcionarioSelecionado.dataNascimento ? 
-                    new Date(funcionarioSelecionado.dataNascimento).toLocaleDateString('pt-BR') : 
+                  label={getTipoLabel(fornecedorSelecionado.tipo) === 'Pessoa Física' ? 'Data de Nascimento' : 'Data de Abertura'}
+                  value={fornecedorSelecionado.dataNascimento ? 
+                    new Date(fornecedorSelecionado.dataNascimento).toLocaleDateString('pt-BR') : 
                     ''
                   }
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
-
-              <Grid item sx={{ width: '20%' }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Estado Civil"
-                  value={getEstadoCivilLabel(funcionarioSelecionado.estadoCivil)}
-                  InputProps={{ readOnly: true }}
-                  variant="outlined"
-                />
-              </Grid>
             </Grid>
 
-            {/* Linha 4: CPF, RG, CNH, Validade CNH */}
+            {/* Linha 4: RG/IE, CPF/CNPJ, Limite de Crédito, Condição de Pagamento */}
             <Grid container spacing={2} sx={{ mb: 4 }}>
-              <Grid item sx={{ width: '20%', minWidth: 150 }}>
+                <Grid item sx={{ width: '20%' }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="CPF"
-                  value={funcionarioSelecionado.cpfCnpj ? formatCPF(funcionarioSelecionado.cpfCnpj) : ''}
+                  label={getTipoLabel(fornecedorSelecionado.tipo) === 'Pessoa Física' ? 'RG' : 'Inscrição Estadual'}
+                  value={fornecedorSelecionado.rgInscricaoEstadual || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -766,85 +796,44 @@ const FuncionarioListMUI = () => {
                 <TextField
                   fullWidth
                   size="small"
-                  label="RG"
-                  value={funcionarioSelecionado.rgInscricaoEstadual || ''}
+                  label={getTipoLabel(fornecedorSelecionado.tipo) === 'Pessoa Física' ? 'CPF' : 'CNPJ'}
+                  value={fornecedorSelecionado.cpfCnpj ? (
+                    getTipoLabel(fornecedorSelecionado.tipo) === 'Pessoa Física' ? 
+                    formatCPF(fornecedorSelecionado.cpfCnpj) : 
+                    formatCNPJ(fornecedorSelecionado.cpfCnpj)
+                  ) : ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
 
-              <Grid item sx={{ width: '20%' }}>
+              <Grid item sx={{ width: '15%', minWidth: 120 }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="CNH"
-                  value={funcionarioSelecionado.cnh || ''}
-                  InputProps={{ readOnly: true }}
-                  variant="outlined"
-                />
-              </Grid>
-
-              <Grid item sx={{ width: '20%' }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Validade CNH"
-                  value={funcionarioSelecionado.dataValidadeCnh ? 
-                    new Date(funcionarioSelecionado.dataValidadeCnh).toLocaleDateString('pt-BR') : 
+                  label="Limite de Crédito"
+                  value={fornecedorSelecionado.limiteCredito ? 
+                    `R$ ${parseFloat(fornecedorSelecionado.limiteCredito).toFixed(2).replace('.', ',')}` : 
                     ''
                   }
+                  InputProps={{ readOnly: true }}
+                  variant="outlined"
+                />
+              </Grid>
+
+              <Grid item sx={{ width: '35%' }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Condição de Pagamento"
+                  value={fornecedorSelecionado.condicaoPagamentoDescricao || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
             </Grid>
 
-            {/* Linha 5: Data de Admissão, Salário, Data de Demissão */}
-            <Grid container spacing={2} sx={{ mb: 4 }}>
-              <Grid item sx={{ width: '20%', minWidth: 150 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Data de Admissão"
-                  value={funcionarioSelecionado.dataAdmissao ? 
-                    new Date(funcionarioSelecionado.dataAdmissao).toLocaleDateString('pt-BR') : 
-                    ''
-                  }
-                  InputProps={{ readOnly: true }}
-                  variant="outlined"
-                />
-              </Grid>
-
-              <Grid item sx={{ width: '20%' }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Salário"
-                  value={funcionarioSelecionado.salario ? 
-                    `R$ ${parseFloat(funcionarioSelecionado.salario).toFixed(2).replace('.', ',')}` : 
-                    ''
-                  }
-                  InputProps={{ readOnly: true }}
-                  variant="outlined"
-                />
-              </Grid>
-
-              <Grid item sx={{ width: '20%', minWidth: 150 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Data de Demissão"
-                  value={funcionarioSelecionado.dataDemissao ? 
-                    new Date(funcionarioSelecionado.dataDemissao).toLocaleDateString('pt-BR') : 
-                    ''
-                  }
-                  InputProps={{ readOnly: true }}
-                  variant="outlined"
-                />
-              </Grid>
-            </Grid>
-
-            {/* Linha 6: Observações */}
+            {/* Linha 5: Observações */}
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item sx={{width: '100%'}}>
                 <TextField
@@ -853,7 +842,7 @@ const FuncionarioListMUI = () => {
                   rows={3}
                   size="small"
                   label="Observações"
-                  value={funcionarioSelecionado.observacao || ''}
+                  value={fornecedorSelecionado.observacao || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -873,14 +862,14 @@ const FuncionarioListMUI = () => {
               }}
             >
               <Stack spacing={0.5} sx={{ flex: 1 }}>
-                {funcionarioSelecionado.dataCriacao && (
+                {fornecedorSelecionado.dataCadastro && (
                   <Typography variant="caption" color="text.secondary">
-                    Data de cadastro: {new Date(funcionarioSelecionado.dataCriacao).toLocaleString('pt-BR')}
+                    Data de cadastro: {new Date(fornecedorSelecionado.dataCadastro).toLocaleString('pt-BR')}
                   </Typography>
                 )}
-                {funcionarioSelecionado.dataAlteracao && (
+                {fornecedorSelecionado.ultimaModificacao && (
                   <Typography variant="caption" color="text.secondary">
-                    Última modificação: {new Date(funcionarioSelecionado.dataAlteracao).toLocaleString('pt-BR')}
+                    Última modificação: {new Date(fornecedorSelecionado.ultimaModificacao).toLocaleString('pt-BR')}
                   </Typography>
                 )}
               </Stack>
@@ -896,10 +885,10 @@ const FuncionarioListMUI = () => {
           >
             Fechar
           </Button>
-          {funcionarioSelecionado && (
+          {fornecedorSelecionado && (
             <Button
               component={Link}
-              to={`/funcionarios/editar/${funcionarioSelecionado.id}`}
+              to={`/fornecedores/editar/${fornecedorSelecionado.id}`}
               variant="contained"
               startIcon={<EditIcon />}
               onClick={handleCloseModal}
@@ -913,4 +902,4 @@ const FuncionarioListMUI = () => {
   );
 };
 
-export default FuncionarioListMUI;
+export default FornecedorListMUI;

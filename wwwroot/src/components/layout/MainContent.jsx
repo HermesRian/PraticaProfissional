@@ -6,11 +6,14 @@ import Dashboard from '../Dashboard/Dashboard';
 import ClienteList from '../Cliente/ClienteListMUI';
 import ClienteForm from '../Cliente/ClienteFormMUI';
 
-import FornecedorList from '../Fornecedor/FornecedorList';
-import FornecedorForm from '../Fornecedor/FornecedorForm';
+import FornecedorList from '../Fornecedor/FornecedorListMUI';
+import FornecedorForm from '../Fornecedor/FornecedorFormMUI';
 
 import FuncionarioList from '../Funcionario/FuncionarioListMUI';
 import FuncionarioForm from '../Funcionario/FuncionarioFormMUI';
+
+import FuncaoFuncionarioList from '../FuncaoFuncionario/FuncaoFuncionarioListMUI';
+import FuncaoFuncionarioForm from '../FuncaoFuncionario/FuncaoFuncionarioFormMUI';
 
 import CondicaoPagamentoList from '../CondicaoPagamento/CondicaoPagamentoList';
 import CondicaoPagamentoForm from '../CondicaoPagamento/CondicaoPagamentoForm';
@@ -54,6 +57,10 @@ const MainContent = () => {
         <Route path="/funcionarios" element={<FuncionarioList />} />
         <Route path="/funcionarios/cadastrar" element={<FuncionarioForm />} />
         <Route path="/funcionarios/editar/:id" element={<FuncionarioForm />} />
+
+        <Route path="/funcoes-funcionario" element={<FuncaoFuncionarioList />} />
+        <Route path="/funcoes-funcionario/cadastrar" element={<FuncaoFuncionarioForm />} />
+        <Route path="/funcoes-funcionario/editar/:id" element={<FuncaoFuncionarioForm />} />
 
         <Route path="/formas-pagamento" element={<FormaPagamentoList />} />
         <Route path="/formas-pagamento/cadastrar" element={<FormaPagamentoForm />} />

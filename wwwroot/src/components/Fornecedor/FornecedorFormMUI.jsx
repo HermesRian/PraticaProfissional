@@ -1,0 +1,1066 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import CidadeModal from '../Cidade/CidadeModal';
+import CondicaoPagamentoModal from '../CondicaoPagamento/CondicaoPagamentoModal';
+import { 
+  validarCPF, 
+  validarCNPJ, 
+  validarCpfCnpjEmTempoReal, 
+  formatCPF, 
+  formatCNPJ, 
+  formatCEP, 
+  formatTelefone, 
+  formatRG, 
+  formatIE 
+} from '../../utils/documentValidation';
+
+// Importações do Material-UI
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  Switch,
+  FormControlLabel,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  Radio,
+  Select,
+  MenuItem,
+  InputLabel,
+  Paper,
+  Divider,
+  Alert,
+  IconButton,
+  InputAdornment,
+  Container,
+  Stack,
+  Tooltip
+} from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+
+// Funções auxiliares para conversão de valores
+const converterEstadoCivilParaNumero = (estadoCivil) => {
+  switch (estadoCivil) {
+    case 'SOLTEIRO': return 0;
+    case 'CASADO': return 1;
+    case 'DIVORCIADO': return 2;
+    case 'VIUVO': return 3;
+    case 'UNIAO_ESTAVEL': return 4;
+    case 'SEPARADO': return 5;
+    case 'OUTRO': return 6;
+    default: return null; // Quando não há valor selecionado
+  }
+};
+
+const converterNumeroParaEstadoCivil = (numero) => {
+  if (numero === null || numero === undefined) return '';
+  
+  switch (Number(numero)) {
+    case 0: return 'SOLTEIRO';
+    case 1: return 'CASADO';
+    case 2: return 'DIVORCIADO';
+    case 3: return 'VIUVO';
+    case 4: return 'UNIAO_ESTAVEL';
+    case 5: return 'SEPARADO';
+    case 6: return 'OUTRO';
+    default: return '';
+  }
+};
+
+// Componente de formulário de fornecedor
+const FornecedorForm = () => {
+  const [fornecedor, setFornecedor] = useState({
+    razaoSocial: '',
+    cpfCnpj: '',
+    endereco: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    cep: '',
+    cidadeId: '',
+    cidadeNome: '',
+    telefone: '',
+    email: '',
+    ativo: true,
+    apelido: '',
+    limiteCredito: '',
+    limiteCredito2: '',
+    nacionalidade: '',
+    rgInscricaoEstadual: '',
+    dataNascimento: '',
+    estadoCivil: '',
+    tipo: 'JURIDICA', // Padrão: pessoa jurídica (fornecedores geralmente são empresas)
+    sexo: '', // Começa vazio para evitar pressuposições
+    condicaoPagamentoId: '',
+    condicaoPagamentoDescricao: '',
+    observacao: '',
+    dataCadastro: '',
+    ultimaModificacao: '',
+  });
+  const [isCidadeModalOpen, setIsCidadeModalOpen] = useState(false);
+  const [isCondicaoPagamentoModalOpen, setIsCondicaoPagamentoModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [showRequiredErrors, setShowRequiredErrors] = useState(false);
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  useEffect(() => {
+    if (id) {
+      fetch(`http://localhost:8080/fornecedores/${id}`)
+        .then((response) => response.json())
+        .then(async (data) => {
+          console.log('Dados recebidos do backend:', data); // Debug para ver os dados
+          console.log('cidadeId:', data.cidadeId, 'condicaoPagamentoId:', data.condicaoPagamentoId);
+          
+          // Convertendo os valores numéricos recebidos do backend para strings
+          const tipoFormatado = typeof data.tipo === 'number' 
+            ? (data.tipo === 0 ? 'FISICA' : 'JURIDICA') 
+            : (data.tipo || 'JURIDICA');
+            
+          const sexoFormatado = typeof data.sexo === 'number' 
+            ? (data.sexo === 0 ? 'M' : data.sexo === 1 ? 'F' : 'O') 
+            : (data.sexo || '');
+
+          // Buscar nome da cidade se cidadeId estiver presente
+          let cidadeNome = '';
+          if (data.cidadeId) {
+            try {
+              console.log('Buscando cidade com ID:', data.cidadeId);
+              const cidadeResponse = await fetch(`http://localhost:8080/cidades/${data.cidadeId}`);
+              if (cidadeResponse.ok) {
+                const cidadeData = await cidadeResponse.json();
+                cidadeNome = cidadeData.nome || '';
+                console.log('Dados da cidade:', cidadeData);
+                console.log('Nome da cidade encontrado:', cidadeNome);
+              } else {
+                console.error('Erro ao buscar cidade, status:', cidadeResponse.status);
+              }
+            } catch (error) {
+              console.error('Erro ao buscar cidade:', error);
+            }
+          }
+
+          // Buscar descrição da condição de pagamento se condicaoPagamentoId estiver presente
+          let condicaoPagamentoDescricao = '';
+          if (data.condicaoPagamentoId) {
+            try {
+              console.log('Buscando condição de pagamento com ID:', data.condicaoPagamentoId);
+              // Testar ambas as URLs possíveis
+              let condicaoResponse = await fetch(`http://localhost:8080/condicoes-pagamento/${data.condicaoPagamentoId}`);
+              
+              if (!condicaoResponse.ok) {
+                // Tentar URL alternativa se a primeira falhar
+                console.log('Tentando URL alternativa para condição de pagamento...');
+                condicaoResponse = await fetch(`http://localhost:8080/condicao-pagamento/${data.condicaoPagamentoId}`);
+              }
+              
+              if (condicaoResponse.ok) {
+                const condicaoData = await condicaoResponse.json();
+                condicaoPagamentoDescricao = condicaoData.descricao || '';
+                console.log('Dados da condição de pagamento:', condicaoData);
+                console.log('Descrição da condição encontrada:', condicaoPagamentoDescricao);
+              } else {
+                console.error('Erro ao buscar condição de pagamento, status:', condicaoResponse.status);
+              }
+            } catch (error) {
+              console.error('Erro ao buscar condição de pagamento:', error);
+            }
+          }
+            
+          const fornecedorAtualizado = {
+            ...data,
+            cidadeNome: cidadeNome,
+            condicaoPagamentoDescricao: condicaoPagamentoDescricao,
+            tipo: tipoFormatado,
+            sexo: sexoFormatado,
+            dataCadastro: data.dataCadastro || '',
+            ultimaModificacao: data.ultimaModificacao || '',
+          };
+          
+          console.log('Fornecedor final com dados buscados:', fornecedorAtualizado);
+          setFornecedor(fornecedorAtualizado);
+        })
+        .catch((error) => console.error('Erro ao buscar fornecedor:', error));
+    }
+  }, [id]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    
+    // Limpa o erro do campo quando o usuário começar a digitar
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+      // Ações especiais para diferentes campos
+    if (name === 'tipo') {
+      // Limpa o CPF/CNPJ e RG/Inscrição Estadual quando muda o tipo de pessoa
+      setFornecedor({ 
+        ...fornecedor, 
+        [name]: value,
+        cpfCnpj: '', // Limpa o campo para aplicar a máscara correta
+        rgInscricaoEstadual: '', // Limpa o campo de RG/IE também
+        sexo: value === 'FISICA' ? fornecedor.sexo || '' : '', // Mantém vazio quando muda para Física
+        estadoCivil: value === 'JURIDICA' ? '' : fornecedor.estadoCivil // Limpa estado civil para Pessoa Jurídica
+      });
+    } else {
+      setFornecedor({ ...fornecedor, [name]: type === 'checkbox' ? checked : value });
+    }
+  };
+
+  // Função específica para campos numéricos com máscara
+  const handleNumericChange = (e, maxLength, maskFunction) => {
+    const { name } = e.target;
+    let value = e.target.value.replace(/[^0-9]/g, '');
+    
+    if (maxLength && value.length > maxLength) {
+      value = value.substring(0, maxLength);
+    }
+    
+    // Limpa o erro do campo quando o usuário começar a digitar
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+    
+    // Armazena o valor limpo no estado
+    setFornecedor({ ...fornecedor, [name]: value });
+  };
+
+  // Função para obter valor formatado para exibição
+  const getDisplayValue = (fieldName, value) => {
+    if (!value) return '';
+    
+    switch (fieldName) {
+      case 'telefone':
+        return formatTelefone(value);
+      case 'cep':
+        return formatCEP(value);
+      case 'cpfCnpj':
+        return fornecedor.tipo === 'FISICA' ? formatCPF(value) : formatCNPJ(value);
+      case 'rgInscricaoEstadual':
+        return fornecedor.tipo === 'FISICA' ? formatRG(value) : formatIE(value);
+      default:
+        return value;
+    }
+  };
+
+  // Função específica para RG (permite X no final)
+  const handleRgChange = (e) => {
+    const { name } = e.target;
+    let value = e.target.value;
+    const maxLength = fornecedor.tipo === 'FISICA' ? 9 : 12; // RG: 9 caracteres, IE: 12 caracteres
+    
+    if (fornecedor.tipo === 'FISICA') {
+      // Para RG: permite números e X apenas no final
+      value = value.replace(/[^0-9Xx]/g, '').toUpperCase();
+      if (value.includes('X') && value.indexOf('X') !== value.length - 1) {
+        value = value.replace(/X/g, '');
+      }
+    } else {
+      // Para IE: apenas números
+      value = value.replace(/[^0-9]/g, '');
+    }
+    
+    if (value.length > maxLength) {
+      value = value.substring(0, maxLength);
+    }
+    
+    // Limpa o erro do campo quando o usuário começar a digitar
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+    
+    setFornecedor({ ...fornecedor, [name]: value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Limpa erros anteriores
+    setFieldErrors({});
+    setErrorMessage('');
+      // Validação de campos obrigatórios
+    const errors = {};
+    
+    if (!fornecedor.razaoSocial?.trim()) {
+      errors.razaoSocial = 'Este campo é obrigatório';
+    }
+    
+    if (!fornecedor.endereco?.trim()) {
+      errors.endereco = 'Este campo é obrigatório';
+    }
+    
+    if (!fornecedor.numero?.trim()) {
+      errors.numero = 'Este campo é obrigatório';
+    }
+    
+    if (!fornecedor.bairro?.trim()) {
+      errors.bairro = 'Este campo é obrigatório';
+    }
+    
+    if (!fornecedor.cep?.trim()) {
+      errors.cep = 'Este campo é obrigatório';
+    }
+    
+    if (!fornecedor.telefone?.trim()) {
+      errors.telefone = 'Este campo é obrigatório';
+    }
+    
+    if (!fornecedor.email?.trim()) {
+      errors.email = 'Este campo é obrigatório';
+    }
+    
+    // CPF/CNPJ não é validado como obrigatório aqui pois depende se é fornecedor brasileiro ou estrangeiro
+    // A validação será feita pelo backend
+    
+    if (!fornecedor.cidadeId) {
+      errors.cidade = 'Selecione uma cidade';
+    }
+    
+    // Se há erros, exibe e para a execução
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setShowRequiredErrors(true);
+      setErrorMessage('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+    
+    // Validando campos obrigatórios
+    if (!fornecedor.cidadeId) {
+   //   setErrorMessage('Por favor, selecione uma cidade.');
+      return;
+    }
+    
+    // Validação do telefone (deve ter 10 ou 11 dígitos)
+    const telefoneSemMascara = fornecedor.telefone?.replace(/\D/g, '') || '';
+    if (telefoneSemMascara.length !== 0 && (telefoneSemMascara.length < 10 || telefoneSemMascara.length > 11)) {
+      setErrorMessage('O telefone deve ter 10 ou 11 dígitos.');
+      return;
+    }
+      // Validação do CPF/CNPJ
+    const cpfCnpjSemMascara = fornecedor.cpfCnpj?.replace(/\D/g, '') || '';
+    const isCpf = fornecedor.tipo === 'FISICA';
+    const tamanhoEsperado = isCpf ? 11 : 14;
+    
+    if (cpfCnpjSemMascara.length !== 0) {
+      // Verifica o tamanho primeiro
+      if (cpfCnpjSemMascara.length !== tamanhoEsperado) {
+        setFieldErrors(prev => ({
+          ...prev,
+          cpfCnpj: `O ${isCpf ? 'CPF' : 'CNPJ'} deve ter exatamente ${tamanhoEsperado} dígitos.`
+        }));
+        //setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
+        return;
+      }
+      
+      // Valida o CPF ou CNPJ
+      const isDocumentoValido = isCpf ? validarCPF(cpfCnpjSemMascara) : validarCNPJ(cpfCnpjSemMascara);
+      
+      if (!isDocumentoValido) {
+        setFieldErrors(prev => ({
+          ...prev,
+          cpfCnpj: `${isCpf ? 'CPF' : 'CNPJ'} inválido. Verifique os dígitos informados.`
+        }));
+      //  setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
+        return;
+      }
+    }
+    
+    // Validação do CEP
+    const cepSemMascara = fornecedor.cep?.replace(/\D/g, '') || '';
+    if (cepSemMascara.length !== 0 && cepSemMascara.length !== 8) {
+      //setErrorMessage('O CEP deve ter exatamente 8 dígitos.');
+      return;
+    }
+
+    // Formatando os dados para corresponder ao modelo esperado pelo backend
+    const fornecedorFormatado = {
+      ...fornecedor,
+      // Convertendo valores numéricos
+      limiteCredito: fornecedor.limiteCredito ? parseFloat(fornecedor.limiteCredito) : null,
+      limiteCredito2: fornecedor.limiteCredito2 ? parseFloat(fornecedor.limiteCredito2) : null,
+      // Convertendo tipo para Integer (conforme backend)
+      tipo: fornecedor.tipo === 'FISICA' ? 0 : 1, // 0 = FISICA, 1 = JURIDICA
+      // Sexo é uma String no backend, então enviamos diretamente
+      sexo: fornecedor.sexo, // 'M' ou 'F'
+      // Estado civil é uma String no backend, então enviamos diretamente
+      estadoCivil: fornecedor.estadoCivil,
+      // Garantindo que os campos obrigatórios não estejam vazios
+      dataNascimento: fornecedor.dataNascimento || null,
+      // CPF/CNPJ: envia null se estiver vazio para evitar problemas de duplicação
+      cpfCnpj: fornecedor.cpfCnpj?.trim() || null,
+    };
+
+    console.log('Dados enviados:', fornecedorFormatado);
+
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `http://localhost:8080/fornecedores/${id}` : 'http://localhost:8080/fornecedores';
+
+    fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(fornecedorFormatado),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          console.error('Erro na resposta:', response.status, response.statusText);
+          
+          return response.text().then(text => {
+            let error;
+            let errorObj = null;
+            try {
+              // Tenta converter a resposta para JSON para extrair a mensagem de erro
+              errorObj = JSON.parse(text);
+              error = errorObj.erro || errorObj.message || 'Erro desconhecido ao salvar fornecedor';
+              console.error('Resposta do servidor:', errorObj);
+            } catch (e) {
+              // Se não for um JSON válido, usa o texto puro
+              error = text || 'Erro ao salvar fornecedor';
+              console.error('Resposta do servidor (texto):', text);
+            }
+            
+            // Se for um erro relacionado ao CPF/CNPJ, exibe no campo específico
+            if (errorObj && errorObj.erro) {
+              const errorMessage = errorObj.erro;
+              if (errorMessage.includes('CNPJ/CPF') || errorMessage.includes('CPF') || errorMessage.includes('CNPJ')) {
+                setFieldErrors(prev => ({
+                  ...prev,
+                  cpfCnpj: errorMessage
+                }));
+                // Não define errorMessage geral para que a mensagem apareça apenas no campo
+                throw new Error('');
+              }
+            }
+            
+            throw new Error(error);
+          });
+        }
+        return response.json();
+      })
+      .then(() => {
+        navigate('/fornecedores');
+      })
+      .catch((error) => {
+        console.error('Erro capturado:', error);
+        // Só exibe mensagem geral se não for um erro de campo específico
+        if (error.message.trim()) {
+          setErrorMessage(error.message);
+        }
+      });
+  };
+
+  const handleCancel = () => {
+    navigate('/fornecedores');
+  };
+
+  const handleOpenCidadeModal = () => {
+    setIsCidadeModalOpen(true);
+  };
+
+  const handleCloseCidadeModal = () => {
+    setIsCidadeModalOpen(false);
+  };
+
+  const handleCidadeSelecionada = (cidade) => {
+    // Limpa o erro da cidade quando uma cidade for selecionada
+    if (fieldErrors.cidade) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.cidade;
+        return newErrors;
+      });
+    }
+    
+    setFornecedor({
+      ...fornecedor,
+      cidadeId: cidade.id,
+      cidadeNome: cidade.nome,
+      cidadeEstado: cidade.estadoNome,
+      cidadeEstadoPais: cidade.estadoPaisNome,
+    });
+    setIsCidadeModalOpen(false);
+  };
+  
+  const handleOpenCondicaoPagamentoModal = () => {
+    setIsCondicaoPagamentoModalOpen(true);
+  };
+
+  const handleCloseCondicaoPagamentoModal = () => {
+    setIsCondicaoPagamentoModalOpen(false);
+  };
+
+  const handleCondicaoPagamentoSelecionada = (condicao) => {
+    setFornecedor({
+      ...fornecedor,
+      condicaoPagamentoId: condicao.id,
+      condicaoPagamentoDescricao: condicao.descricao,
+    });
+    setIsCondicaoPagamentoModalOpen(false);
+  };
+
+  return (
+    <Box sx={{ 
+      padding: { xs: 2, md: 3 }, 
+      bgcolor: '#f8f9fa', 
+      minHeight: '100vh',
+      paddingBottom: 0.5 // Reduzido de 1 para 0.5
+    }}>
+      <Paper 
+        component="form"
+        onSubmit={handleSubmit}
+        elevation={10}
+        sx={{
+          width: '95%',
+          maxWidth: 1390,
+          minHeight: '70vh',
+          mx: 'auto',
+          p: { xs: 2, md: 3, lg: 4 },
+          pb: 0, // Removido padding bottom para aproximar mais da margem inferior
+          borderRadius: 2,
+          overflow: 'hidden',
+          position: 'relative',
+          '& .MuiFormLabel-root': {
+            display: 'flex',
+            alignItems: 'flex-start',
+            ml: -0.5,
+          },
+          '& .MuiFormControl-root': {
+            width: '100%'
+          }
+        }}
+      >
+        {/* Cabeçalho com título e switch Ativo */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 4 
+        }}>
+          {/* Espaço vazio à esquerda para centralizar o título */}
+          <Box sx={{ width: 120 }}></Box>
+          
+          {/* Título centralizado */}
+          <Typography 
+            variant="h5" 
+            component="h1" 
+            align="center" 
+            sx={{ color: '#333', fontWeight: 600, flex: 1 }}
+          >
+            {id ? 'Editar Fornecedor' : 'Cadastrar Novo Fornecedor'}
+          </Typography>
+            {/* Switch Ativo à direita */}
+          <Box sx={{ width: 120, display: 'flex', justifyContent: 'flex-end' }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={fornecedor.ativo}
+                  onChange={handleChange}
+                  name="ativo"
+                  color="primary"
+                  disabled={!id} // Desabilita durante cadastro (quando não há id)
+                />
+              }
+              label="Ativo"
+              sx={{ mr: 0 }}
+            />
+          </Box>
+        </Box>
+
+        {/* Linha 1: Código, Tipo de Pessoa, Fornecedor, Apelido, Estado Civil */}
+        <Grid container spacing={2} alignItems="center" sx={{ mb: 4 }}>
+          <Grid item sx={{ width: '6%', minWidth: 80 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Código"
+              name="id"
+              value={id || ''}
+              InputProps={{ readOnly: true }}
+              variant="outlined"
+              disabled
+            />
+          </Grid>
+
+          <Grid item sx={{ width: '16%', minWidth: 140 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Tipo de Pessoa</InputLabel>
+              <Select
+                name="tipo"
+                value={fornecedor.tipo}
+                onChange={handleChange}
+                label="Tipo de Pessoa"
+              >
+                <MenuItem value="FISICA">Pessoa Física</MenuItem>
+                <MenuItem value="JURIDICA">Pessoa Jurídica</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item sx={{ width: fornecedor.tipo === 'FISICA' ? '28%' : '35%' }}>
+            <TextField
+              fullWidth
+              required
+              size="small"
+              label="Fornecedor"
+              name="razaoSocial"
+              value={fornecedor.razaoSocial}
+              onChange={handleChange}
+              placeholder="Razão social do fornecedor"
+              variant="outlined"
+              error={!!fieldErrors.razaoSocial}
+              helperText={fieldErrors.razaoSocial || ''}
+            />
+          </Grid>
+
+          <Grid item sx={{ width: fornecedor.tipo === 'FISICA' ? '18%' : '27%' }}>
+            <TextField
+              fullWidth
+              size="small"
+              label={fornecedor.tipo === 'FISICA' ? 'Apelido' : 'Nome Fantasia'}
+              name="apelido"
+              value={fornecedor.apelido}
+              onChange={handleChange}
+              placeholder={fornecedor.tipo === 'FISICA' ? "Apelido" : "Nome Fantasia"}
+              variant="outlined"
+            />
+          </Grid>
+          {fornecedor.tipo === 'FISICA' && (
+            <Grid item sx={{ width: '15%' }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Estado Civil</InputLabel>
+                <Select
+                  name="estadoCivil"
+                  value={fornecedor.estadoCivil}
+                  onChange={handleChange}
+                  label="Estado Civil"
+                  sx={{ minWidth: 140 }}
+                >
+                  <MenuItem value="">Selecione...</MenuItem>
+                  <MenuItem value="SOLTEIRO">Solteiro(a)</MenuItem>
+                  <MenuItem value="CASADO">Casado(a)</MenuItem>
+                  <MenuItem value="DIVORCIADO">Divorciado(a)</MenuItem>
+                  <MenuItem value="VIUVO">Viúvo(a)</MenuItem>
+                  <MenuItem value="UNIAO_ESTAVEL">União Estável</MenuItem>
+                  <MenuItem value="SEPARADO">Separado(a)</MenuItem>
+                  <MenuItem value="OUTRO">Outro</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
+        </Grid>
+
+        {/* Linha 2: Rua, Número, Complemento, Bairro, CEP, Cidade */}
+        <Grid container spacing={2} sx={{ mb: 4 }}>
+          <Grid item sx={{ width: '25%' }}>
+            <TextField
+              fullWidth
+              required
+              size="small"
+              label="Endereço"
+              name="endereco"
+              value={fornecedor.endereco}
+              onChange={handleChange}
+              placeholder="Rua, Avenida, etc."
+              variant="outlined"
+              error={!!fieldErrors.endereco}
+              helperText={fieldErrors.endereco || ''}
+            />
+          </Grid>
+              
+          <Grid item sx={{ width: '8%', minWidth: 80 }}>
+            <TextField
+              fullWidth
+              required
+              size="small"
+              label="Número"
+              name="numero"
+              value={fornecedor.numero}
+              onChange={(e) => handleNumericChange(e)}
+              placeholder="Nº"
+              variant="outlined"
+              inputProps={{ inputMode: 'numeric' }}
+              error={!!fieldErrors.numero}
+              helperText={fieldErrors.numero || ''}
+            />
+          </Grid>
+            
+          <Grid item sx={{ width: '13%' }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Complemento"
+              name="complemento"
+              value={fornecedor.complemento}
+              onChange={handleChange}
+              placeholder="Apto, Bloco, Casa"
+              variant="outlined"
+            />
+          </Grid>
+              
+          <Grid item sx={{ width: '13%', minWidth: 120 }}>
+            <TextField
+              fullWidth
+              required
+              size="small"
+              label="Bairro"
+              name="bairro"
+              value={fornecedor.bairro}
+              onChange={handleChange}
+              placeholder="Bairro"
+              variant="outlined"
+              error={!!fieldErrors.bairro}
+              helperText={fieldErrors.bairro || ''}
+            />
+          </Grid>
+
+          <Grid item sx={{ width: '10%', minWidth: 100 }}>
+            <TextField
+              fullWidth
+              required
+              size="small"
+              label="CEP"
+              name="cep"
+              value={getDisplayValue('cep', fornecedor.cep)}
+              onChange={e => handleNumericChange(e, 8)}
+              variant="outlined"
+              error={!!fieldErrors.cep || (fornecedor.cep && fornecedor.cep.length !== 8)}
+              helperText={fieldErrors.cep || (fornecedor.cep && fornecedor.cep.length !== 8 ? 'CEP inválido' : '')}
+              inputProps={{ inputMode: 'numeric' }}
+              autoComplete="off"
+            />
+          </Grid>
+
+          <Grid item sx={{ width: '20%', minWidth: 150 }}>
+            <FormControl fullWidth variant="outlined" size="small" error={!!fieldErrors.cidade}>
+              <TextField
+                id="cidade-input"
+                value={fornecedor.cidadeNome || ''}
+                label="Cidade"
+                disabled
+                fullWidth
+                size="small"
+                sx={{
+                  backgroundColor: '#f8f9fa',
+                  '& .MuiInputBase-input': {
+                    paddingTop: '8px',
+                    paddingBottom: '8px'
+                  }
+                }}
+                InputLabelProps={{ 
+                  shrink: true
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <Tooltip title="Buscar cidade">
+                      <IconButton 
+                        onClick={handleOpenCidadeModal}
+                        size="small"
+                        color="primary"
+                      >
+                        <SearchIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )
+                }}
+                error={!!fieldErrors.cidade}
+                helperText={fieldErrors.cidade || ''}
+              />
+            </FormControl>
+          </Grid>
+        </Grid>
+
+        {/* Linha 3: Telefone, Email, Sexo, Data de Nascimento */}
+        <Grid container spacing={2} sx={{ mb: 4 }}>
+          <Grid item sx={{ width: '20%', minWidth: 150 }}>
+            <TextField
+              fullWidth
+              required
+              size="small"
+              label="Telefone"
+              name="telefone"
+              value={getDisplayValue('telefone', fornecedor.telefone)}
+              onChange={e => handleNumericChange(e, 11)}
+              variant="outlined"
+              error={!!fieldErrors.telefone || (fornecedor.telefone && (fornecedor.telefone.length < 10 || fornecedor.telefone.length > 11))}
+              helperText={fieldErrors.telefone || (fornecedor.telefone && (fornecedor.telefone.length < 10 || fornecedor.telefone.length > 11) ? 'Telefone inválido (10 ou 11 dígitos)' : '')}
+              inputProps={{ inputMode: 'numeric' }}
+              autoComplete="off"
+            />
+          </Grid>
+          <Grid item sx={{ width: fornecedor.tipo === 'FISICA' ? '25%' : '25%' }}>
+            <TextField
+              fullWidth
+              required
+              type="email"
+              size="small"
+              label="Email"
+              name="email"
+              value={fornecedor.email}
+              onChange={handleChange}
+              placeholder="exemplo@email.com"
+              variant="outlined"
+              error={!!fieldErrors.email}
+              helperText={fieldErrors.email || ''}
+            />
+          </Grid>
+          
+          {fornecedor.tipo === 'FISICA' && (
+            <Grid item sx={{ width: '15%', minWidth: 120 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Sexo</InputLabel>
+                <Select
+                  name="sexo"
+                  value={fornecedor.sexo}
+                  onChange={handleChange}
+                  label="Sexo"
+                >
+                  <MenuItem value="">Selecione...</MenuItem>
+                  <MenuItem value="M">Masculino</MenuItem>
+                  <MenuItem value="F">Feminino</MenuItem>
+                  <MenuItem value="O">Outro</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
+          
+          <Grid item sx={{ width: fornecedor.tipo === 'FISICA' ? '20%' : '20%', minWidth: 150 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label={fornecedor.tipo === 'FISICA' ? 'Data de Nascimento' : 'Data de Abertura'}
+              name="dataNascimento"
+              type="date"
+              value={fornecedor.dataNascimento ? fornecedor.dataNascimento.split('T')[0] : ''}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+              variant="outlined"
+              error={false}
+              helperText={''}
+              autoComplete="off"
+            />
+          </Grid>
+        </Grid>
+
+        {/* Linha 4: CPF/CNPJ, RG/Inscrição Estadual, Limite de Crédito, Condição de Pagamento */}
+        <Grid container spacing={2} sx={{ mb: 4 }}>
+          <Grid item sx={{ width: fornecedor.tipo === 'FISICA' ? '15%' : '20%', minWidth: 150 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label={fornecedor.tipo === 'FISICA' ? 'CPF' : 'CNPJ'}
+              name="cpfCnpj"
+              value={getDisplayValue('cpfCnpj', fornecedor.cpfCnpj)}
+              onChange={e => {
+                const maxLength = fornecedor.tipo === 'FISICA' ? 11 : 14;
+                handleNumericChange(e, maxLength);
+              }}
+              variant="outlined"
+              error={!!fieldErrors.cpfCnpj || (() => {
+                const validacao = validarCpfCnpjEmTempoReal(fornecedor.cpfCnpj, fornecedor.tipo);
+                return !validacao.isValid;
+              })()}
+              helperText={fieldErrors.cpfCnpj || (() => {
+                const validacao = validarCpfCnpjEmTempoReal(fornecedor.cpfCnpj, fornecedor.tipo);
+                return validacao.message;
+              })()}
+              inputProps={{ inputMode: 'numeric' }}
+              autoComplete="off"
+            />
+          </Grid>
+
+          <Grid item sx={{ width: '20%', minWidth: 150 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label={fornecedor.tipo === 'FISICA' ? 'RG' : 'Inscrição Estadual'}
+              name="rgInscricaoEstadual"
+              value={getDisplayValue('rgInscricaoEstadual', fornecedor.rgInscricaoEstadual)}
+              onChange={handleRgChange}
+              variant="outlined"
+              inputProps={{ maxLength: fornecedor.tipo === 'FISICA' ? 15 : 20 }}
+              autoComplete="off"
+            />
+          </Grid>
+          
+          <Grid item sx={{ width: '16%', minWidth: 120 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Limite de Crédito"
+              name="limiteCredito"
+              type="number"
+              value={fornecedor.limiteCredito}
+              onChange={handleChange}
+              placeholder="0,00"
+              InputProps={{
+                startAdornment: <InputAdornment position="start">R$</InputAdornment>
+              }}
+              inputProps={{
+                step: "0.01",
+                min: "0"
+              }}
+              variant="outlined"
+            />
+          </Grid>
+
+          <Grid item sx={{ width: '30%', minWidth: 200 }}>
+            <FormControl fullWidth variant="outlined" size="small">
+              <TextField
+                id="condicao-pagamento-input"
+                value={fornecedor.condicaoPagamentoDescricao || ''}
+                label="Condição de Pagamento"
+                disabled
+                fullWidth
+                size="small"
+                sx={{
+                  backgroundColor: '#f8f9fa',
+                  '& .MuiInputBase-input': {
+                    paddingTop: '8px',
+                    paddingBottom: '8px'
+                  }
+                }}
+                InputLabelProps={{ 
+                  shrink: true 
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <Tooltip title="Buscar condição de pagamento">
+                      <IconButton 
+                        onClick={handleOpenCondicaoPagamentoModal}
+                        size="small"
+                        color="primary"
+                      >
+                        <SearchIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )
+                }}
+              />
+            </FormControl>
+          </Grid>
+        </Grid>
+
+        {/* Linha 5: Observação */}
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Grid item sx={{ width: '100%' }}>
+            <TextField
+              fullWidth
+              multiline
+              rows={3} // Reduzido de 4 para 3 linhas
+              size="small"
+              label="Observações"
+              name="observacao"
+              value={fornecedor.observacao}
+              onChange={handleChange}
+              placeholder="Informações adicionais sobre o fornecedor"
+              variant="outlined"
+            />
+          </Grid>
+        </Grid>
+
+        {/* Mensagem de erro */}
+        {errorMessage && (
+          <Alert 
+            severity="error" 
+            variant="filled"
+            onClose={() => setErrorMessage('')}
+            sx={{ mb: 2, mt: 2 }}
+          >
+            {errorMessage}
+          </Alert>
+        )}
+
+        {/* Botões e Informações de registro */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 2,
+            mt: 2,
+            pt: 2,
+            borderTop: '1px solid #eee',
+            position: 'sticky',
+            bottom: '5px', // Reduzido de 10px para 5px
+            backgroundColor: 'white',
+            zIndex: 10,
+            pb: 0.5, // Reduzido de 1 para 0.5
+            boxShadow: '0px -4px 8px rgba(0, 0, 0, 0.05)'
+          }}
+        >
+          {/* Informações de registro - lado esquerdo */}
+          <Stack spacing={0.5} sx={{ flex: 1 }}>
+            {fornecedor.dataCadastro && (
+              <Typography variant="caption" color="text.secondary">
+                Data de cadastro: {new Date(fornecedor.dataCadastro).toLocaleString('pt-BR')}
+              </Typography>
+            )}
+            {fornecedor.ultimaModificacao && (
+              <Typography variant="caption" color="text.secondary">
+                Última modificação: {new Date(fornecedor.ultimaModificacao).toLocaleString('pt-BR')}
+              </Typography>
+            )}
+          </Stack>
+
+          {/* Botões - lado direito */}
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="contained"
+              type="submit"
+              color="primary"
+              size="medium"
+              sx={{ minWidth: 100, py: 1 }}
+            >
+              Salvar
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={handleCancel}
+              color="inherit"
+              type="button"
+              size="medium"
+              sx={{ minWidth: 100, py: 1 }}
+            >
+              Cancelar
+            </Button>
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Modal de seleção de cidades */}
+      {isCidadeModalOpen && (
+        <CidadeModal
+          onClose={handleCloseCidadeModal}
+          onCidadeSelecionada={handleCidadeSelecionada}
+        />
+      )}
+      
+      {/* Modal de seleção de condições de pagamento */}
+      {isCondicaoPagamentoModalOpen && (
+        <CondicaoPagamentoModal
+          onClose={handleCloseCondicaoPagamentoModal}
+          onCondicaoSelecionada={handleCondicaoPagamentoSelecionada}
+        />
+      )}
+    </Box>
+  );
+};
+
+export default FornecedorForm;

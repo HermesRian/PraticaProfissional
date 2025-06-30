@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import CidadeModal from '../Cidade/CidadeModal';
+import CargoModal from '../Cargo/CargoModal';
 import { 
   validarCPF, 
   formatCPF, 
@@ -36,7 +37,8 @@ const FuncionarioFormMUI = () => {
   const [funcionario, setFuncionario] = useState({
     nome: '',
     cpfCnpj: '',
-    cargo: '',
+    cargoId: '',
+    cargoNome: '',
     salario: '',
     email: '',
     telefone: '',
@@ -65,6 +67,7 @@ const FuncionarioFormMUI = () => {
   });
 
   const [isCidadeModalOpen, setIsCidadeModalOpen] = useState(false);
+  const [isCargoModalOpen, setIsCargoModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
@@ -90,10 +93,25 @@ const FuncionarioFormMUI = () => {
               console.error('Erro ao buscar cidade:', error);
             }
           }
+
+          // Buscar nome do cargo se cargoId estiver presente
+          let cargoNome = '';
+          if (data.cargoId) {
+            try {
+              const cargoResponse = await fetch(`http://localhost:8080/funcoes-funcionario/${data.cargoId}`);
+              if (cargoResponse.ok) {
+                const cargoData = await cargoResponse.json();
+                cargoNome = cargoData.nome || '';
+              }
+            } catch (error) {
+              console.error('Erro ao buscar cargo:', error);
+            }
+          }
           
           const funcionarioAtualizado = {
             ...data,
             cidadeNome: cidadeNome,
+            cargoNome: cargoNome,
             // Formatar datas para o padrão do HTML input date
             dataAdmissao: data.dataAdmissao ? data.dataAdmissao.split('T')[0] : '',
             dataDemissao: data.dataDemissao ? data.dataDemissao.split('T')[0] : '',
@@ -190,8 +208,8 @@ const FuncionarioFormMUI = () => {
       errors.cpfCnpj = 'CPF inválido';
     }
     
-    if (!funcionario.cargo?.trim()) {
-      errors.cargo = 'Este campo é obrigatório';
+    if (!funcionario.cargoId) {
+      errors.cargo = 'Selecione um cargo';
     }
     
     if (!funcionario.email?.trim()) {
@@ -296,6 +314,14 @@ const FuncionarioFormMUI = () => {
     setIsCidadeModalOpen(false);
   };
 
+  const handleOpenCargoModal = () => {
+    setIsCargoModalOpen(true);
+  };
+
+  const handleCloseCargoModal = () => {
+    setIsCargoModalOpen(false);
+  };
+
   const handleCidadeSelecionada = (cidade) => {
     // Limpa o erro da cidade quando uma cidade for selecionada
     if (fieldErrors.cidade) {
@@ -312,6 +338,24 @@ const FuncionarioFormMUI = () => {
       cidadeNome: cidade.nome,
     });
     setIsCidadeModalOpen(false);
+  };
+
+  const handleCargoSelecionado = (cargo) => {
+    // Limpa o erro do cargo quando um cargo for selecionado
+    if (fieldErrors.cargo) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.cargo;
+        return newErrors;
+      });
+    }
+    
+    setFuncionario({
+      ...funcionario,
+      cargoId: cargo.id,
+      cargoNome: cargo.nome,
+    });
+    setIsCargoModalOpen(false);
   };
 
   return (
@@ -428,19 +472,41 @@ const FuncionarioFormMUI = () => {
           </Grid>
 
           <Grid item sx={{ width: '25%' }}>
-            <TextField
-              fullWidth
-              required
-              size="small"
-              label="Cargo"
-              name="cargo"
-              value={funcionario.cargo}
-              onChange={handleChange}
-              placeholder="Cargo do funcionário"
-              variant="outlined"
-              error={!!fieldErrors.cargo}
-              helperText={fieldErrors.cargo || ''}
-            />
+            <FormControl fullWidth variant="outlined" size="small" error={!!fieldErrors.cargo}>
+              <TextField
+                id="cargo-input"
+                value={funcionario.cargoNome || ''}
+                label="Cargo"
+                disabled
+                fullWidth
+                size="small"
+                sx={{
+                  backgroundColor: '#f8f9fa',
+                  '& .MuiInputBase-input': {
+                    paddingTop: '8px',
+                    paddingBottom: '8px'
+                  }
+                }}
+                InputLabelProps={{ 
+                  shrink: true
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <Tooltip title="Buscar cargo">
+                      <IconButton 
+                        onClick={handleOpenCargoModal}
+                        size="small"
+                        color="primary"
+                      >
+                        <SearchIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )
+                }}
+                error={!!fieldErrors.cargo}
+                helperText={fieldErrors.cargo || ''}
+              />
+            </FormControl>
           </Grid>
         </Grid>
 
@@ -862,6 +928,14 @@ const FuncionarioFormMUI = () => {
         <CidadeModal
           onClose={handleCloseCidadeModal}
           onCidadeSelecionada={handleCidadeSelecionada}
+        />
+      )}
+
+      {/* Modal de seleção de cargos */}
+      {isCargoModalOpen && (
+        <CargoModal
+          onClose={handleCloseCargoModal}
+          onCargoSelecionado={handleCargoSelecionado}
         />
       )}
     </Box>

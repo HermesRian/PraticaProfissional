@@ -44,7 +44,7 @@ public class FornecedorServiceImpl implements FornecedorService {
                 if (estado != null) {
                     Pais pais = paisDAO.buscarPorId(Long.valueOf(estado.getPaisId()));
                     if (pais != null && "BRASIL".equalsIgnoreCase(pais.getNome())) {
-                        if (fornecedor.getCnpj() == null || fornecedor.getCnpj().isEmpty()) {
+                        if (fornecedor.getCpfCnpj() == null || fornecedor.getCpfCnpj().isEmpty()) {
                             throw new IllegalArgumentException("CNPJ é obrigatório para fornecedores brasileiros.");
                         }
                     }
@@ -52,12 +52,8 @@ public class FornecedorServiceImpl implements FornecedorService {
             }
         }
 
-        if (fornecedor.getCnpj() != null && fornecedor.getCnpj().isEmpty()) {
-            fornecedor.setCnpj(null);
-        }
-
-        if (fornecedor.getCnpj() != null && fornecedor.getCnpj().isEmpty()) {
-            fornecedor.setCnpj(null);
+        if (fornecedor.getCpfCnpj() != null && fornecedor.getCpfCnpj().isEmpty()) {
+            fornecedor.setCpfCnpj(null);
         }
 
         fornecedorDAO.salvar(fornecedor);
@@ -84,7 +80,7 @@ public class FornecedorServiceImpl implements FornecedorService {
                 if (estado != null) {
                     Pais pais = paisDAO.buscarPorId(Long.valueOf(estado.getPaisId()));
                     if (pais != null && "BRASIL".equalsIgnoreCase(pais.getNome())) {
-                        if (fornecedor.getCnpj() == null || fornecedor.getCnpj().isEmpty()) {
+                        if (fornecedor.getCpfCnpj() == null || fornecedor.getCpfCnpj().isEmpty()) {
                             throw new IllegalArgumentException("CNPJ é obrigatório para fornecedores brasileiros.");
                         }
                     }
@@ -92,8 +88,8 @@ public class FornecedorServiceImpl implements FornecedorService {
             }
         }
 
-        if (fornecedor.getCnpj() != null && fornecedor.getCnpj().isEmpty()) {
-            fornecedor.setCnpj(null);
+        if (fornecedor.getCpfCnpj() != null && fornecedor.getCpfCnpj().isEmpty()) {
+            fornecedor.setCpfCnpj(null);
         }
 
         fornecedorDAO.update(fornecedor);
