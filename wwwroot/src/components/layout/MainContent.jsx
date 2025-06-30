@@ -15,8 +15,8 @@ import FuncionarioForm from '../Funcionario/FuncionarioFormMUI';
 import FuncaoFuncionarioList from '../FuncaoFuncionario/FuncaoFuncionarioListMUI';
 import FuncaoFuncionarioForm from '../FuncaoFuncionario/FuncaoFuncionarioFormMUI';
 
-import CondicaoPagamentoList from '../CondicaoPagamento/CondicaoPagamentoList';
-import CondicaoPagamentoForm from '../CondicaoPagamento/CondicaoPagamentoForm';
+import CondicaoPagamentoList from '../CondicaoPagamento/CondicaoPagamentoListMUI';
+import CondicaoPagamentoForm from '../CondicaoPagamento/CondicaoPagamentoFormMUI';
 
 import FormaPagamentoList from '../FormaPagamento/FormaPagamentoListMUI';
 import FormaPagamentoForm from '../FormaPagamento/FormaPagamentoFormMUI';
