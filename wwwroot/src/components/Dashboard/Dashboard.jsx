@@ -30,12 +30,6 @@ const Dashboard = () => {
       icon: <WorkIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />,
       path: '/funcionarios',
     },
-    {
-      title: 'Produtos',
-      description: 'Gerencie seus produtos',
-      icon: <InventoryIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />,
-      path: '/produtos',
-    },
   ];
 
   const handleCardClick = (path) => {

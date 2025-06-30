@@ -99,11 +99,6 @@
     {
       kind: 'divider',
     },
-    {
-      segment: 'produtos',
-      title: 'Produtos',
-      icon: <InventoryIcon />,
-    },
   ];
 
   // Configuração de branding

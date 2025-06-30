@@ -24,8 +24,8 @@ import FormaPagamentoForm from '../FormaPagamento/FormaPagamentoFormMUI';
 import ProdutoList from '../Produto/ProdutoList';
 import ProdutoForm from '../Produto/ProdutoForm';
 
-import CidadeList from '../Cidade/CidadeList';
-import CidadeForm from '../Cidade/CidadeForm';
+import CidadeListMUI from '../Cidade/CidadeListMUI';
+import CidadeFormMUI from '../Cidade/CidadeFormMUI';
 
 import PaisList from '../Pais/PaisListMUI';
 import PaisForm from '../Pais/PaisFormMUI';
@@ -74,9 +74,9 @@ const MainContent = () => {
         <Route path="/produtos/cadastrar" element={<ProdutoForm />} />
         <Route path="/produtos/editar/:id" element={<ProdutoForm />} />
 
-        <Route path="/cidades" element={<CidadeList />} />
-        <Route path="/cidades/cadastrar" element={<CidadeForm />} />
-        <Route path="/cidades/editar/:id" element={<CidadeForm />} />
+        <Route path="/cidades" element={<CidadeListMUI />} />
+        <Route path="/cidades/cadastrar" element={<CidadeFormMUI />} />
+        <Route path="/cidades/editar/:id" element={<CidadeFormMUI />} />
 
         <Route path="/paises" element={<PaisList />} />
         <Route path="/paises/cadastrar" element={<PaisForm />} />
