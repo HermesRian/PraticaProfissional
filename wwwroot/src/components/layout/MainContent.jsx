@@ -27,11 +27,11 @@ import ProdutoForm from '../Produto/ProdutoForm';
 import CidadeList from '../Cidade/CidadeList';
 import CidadeForm from '../Cidade/CidadeForm';
 
-import PaisList from '../Pais/PaisList';
-import PaisForm from '../Pais/PaisForm';
+import PaisList from '../Pais/PaisListMUI';
+import PaisForm from '../Pais/PaisFormMUI';
 
-import EstadoList from '../Estado/EstadoList';
-import EstadoForm from '../Estado/EstadoForm';
+import EstadoListMUI from '../Estado/EstadoListMUI';
+import EstadoFormMUI from '../Estado/EstadoFormMUI';
 import EstadoModal from '../Estado/EstadoModal';
 import EstadoFormModal from '../Estado/EstadoFormModal';
 
@@ -82,9 +82,9 @@ const MainContent = () => {
         <Route path="/paises/cadastrar" element={<PaisForm />} />
         <Route path="/paises/editar/:id" element={<PaisForm />} />
 
-        <Route path="/estados" element={<EstadoList />} />
-        <Route path="/estados/cadastrar" element={<EstadoForm />} />
-        <Route path="/estados/editar/:id" element={<EstadoForm />} />
+        <Route path="/estados" element={<EstadoListMUI />} />
+        <Route path="/estados/cadastrar" element={<EstadoFormMUI />} />
+        <Route path="/estados/editar/:id" element={<EstadoFormMUI />} />
       </Routes>
     </main>
   );
