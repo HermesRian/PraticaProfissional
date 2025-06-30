@@ -12,22 +12,24 @@ public class CidadeServiceImpl implements CidadeService {
     private final CidadeDAO cidadeDAO;
 
     public CidadeServiceImpl(CidadeDAO cidadeDAO) {
+
         this.cidadeDAO = cidadeDAO;
     }
 
     @Override
     public Cidade salvar(Cidade cidade) {
-        //Debug: Verifica se a cidade já existe
         return cidadeDAO.salvar(cidade);
     }
 
     @Override
     public List<Cidade> listarTodas() {
+
         return cidadeDAO.listarTodas();
     }
 
     @Override
     public Cidade buscarPorId(Long id) {
+
         return cidadeDAO.buscarPorId(id);
     }
 
@@ -41,11 +43,12 @@ public class CidadeServiceImpl implements CidadeService {
         cidadeExistente.setCodigoIbge(cidade.getCodigoIbge());
         cidadeExistente.setEstadoId(cidade.getEstadoId());
         cidadeDAO.atualizar(cidadeExistente);
-        return cidadeExistente; // Retorna a entidade atualizada
+        return cidadeExistente;
     }
 
     @Override
     public void excluir(Long id) {
+
         cidadeDAO.excluir(id);
     }
 }

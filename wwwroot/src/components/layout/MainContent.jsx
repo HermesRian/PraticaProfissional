@@ -9,8 +9,8 @@ import ClienteForm from '../Cliente/ClienteFormMUI';
 import FornecedorList from '../Fornecedor/FornecedorList';
 import FornecedorForm from '../Fornecedor/FornecedorForm';
 
-import FuncionarioList from '../Funcionario/FuncionarioList';
-import FuncionarioForm from '../Funcionario/FuncionarioForm';
+import FuncionarioList from '../Funcionario/FuncionarioListMUI';
+import FuncionarioForm from '../Funcionario/FuncionarioFormMUI';
 
 import CondicaoPagamentoList from '../CondicaoPagamento/CondicaoPagamentoList';
 import CondicaoPagamentoForm from '../CondicaoPagamento/CondicaoPagamentoForm';

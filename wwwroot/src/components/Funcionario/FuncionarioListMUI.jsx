@@ -40,17 +40,16 @@ import {
   Add as AddIcon,
   Search as SearchIcon,
   Person as PersonIcon,
-  Business as BusinessIcon,
   Close as CloseIcon,
   Block as BlockIcon,
   CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
-import { formatCPF, formatCNPJ, formatCEP, formatTelefone, censurarCPF, censurarCNPJ } from '../../utils/documentValidation';
+import { formatCPF, formatCEP, formatTelefone, censurarCPF } from '../../utils/documentValidation';
 
-const ClienteListMUI = () => {
-  const [clientes, setClientes] = useState([]);
+const FuncionarioListMUI = () => {
+  const [funcionarios, setFuncionarios] = useState([]);
   const [cidades, setCidades] = useState([]);
-  const [clienteSelecionado, setClienteSelecionado] = useState(null);
+  const [funcionarioSelecionado, setFuncionarioSelecionado] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: 'nome', direction: 'asc' });
   const [filtro, setFiltro] = useState('');
@@ -62,11 +61,11 @@ const ClienteListMUI = () => {
 
   useEffect(() => {
     Promise.all([
-      fetch('http://localhost:8080/clientes').then(res => res.json()),
+      fetch('http://localhost:8080/funcionarios').then(res => res.json()),
       fetch('http://localhost:8080/cidades').then(res => res.json())
     ])
-    .then(([clientesData, cidadesData]) => {
-      setClientes(clientesData);
+    .then(([funcionariosData, cidadesData]) => {
+      setFuncionarios(funcionariosData);
       setCidades(cidadesData);
       setLoading(false);
     })
@@ -89,7 +88,7 @@ const ClienteListMUI = () => {
     }
     setSortConfig({ key, direction });
 
-    const sortedClientes = [...clientes].sort((a, b) => {
+    const sortedFuncionarios = [...funcionarios].sort((a, b) => {
       let aValue = a[key];
       let bValue = b[key];
 
@@ -116,87 +115,59 @@ const ClienteListMUI = () => {
       }
       return 0;
     });
-    setClientes(sortedClientes);
+    setFuncionarios(sortedFuncionarios);
   };
 
   const handleDelete = (id) => {
-    const cliente = clientes.find(c => c.id === id);
-    const isAtivo = cliente?.ativo;
+    const funcionario = funcionarios.find(f => f.id === id);
+    const isAtivo = funcionario?.ativo;
     const acao = isAtivo ? 'excluir' : 'ativar';
     const mensagem = isAtivo ? 
-      'Tem certeza que deseja excluir este cliente?' : 
-      'Tem certeza que deseja ativar este cliente?';
+      'Tem certeza que deseja excluir este funcionário?' : 
+      'Tem certeza que deseja ativar este funcionário?';
     
     if (window.confirm(mensagem)) {
-      fetch(`http://localhost:8080/clientes/${id}`, {
+      fetch(`http://localhost:8080/funcionarios/${id}`, {
         method: 'DELETE',
       })
         .then(() => {
-          // Atualiza o status do cliente na lista local
-          setClientes(clientes.map(cliente => 
-            cliente.id === id ? { ...cliente, ativo: !cliente.ativo } : cliente
+          // Atualiza o status do funcionário na lista local
+          setFuncionarios(funcionarios.map(funcionario => 
+            funcionario.id === id ? { ...funcionario, ativo: !funcionario.ativo } : funcionario
           ));
         })
         .catch((error) => {
-          console.error(`Erro ao ${acao} cliente:`, error);
-          setError(`Erro ao ${acao} cliente`);
+          console.error(`Erro ao ${acao} funcionário:`, error);
+          setError(`Erro ao ${acao} funcionário`);
         });
     }
   };
-  const handleView = async (cliente) => {
-    // Buscar descrição da condição de pagamento se condicaoPagamentoId estiver presente
-    let clienteComCondicaoPagamento = { ...cliente };
-    
-    if (cliente.condicaoPagamentoId) {
-      try {
-        console.log('Buscando condição de pagamento com ID:', cliente.condicaoPagamentoId);
-        const condicaoResponse = await fetch(`http://localhost:8080/condicoes-pagamento/${cliente.condicaoPagamentoId}`);
-        
-        if (condicaoResponse.ok) {
-          const condicaoData = await condicaoResponse.json();
-          clienteComCondicaoPagamento.condicaoPagamentoDescricao = condicaoData.descricao || '';
-          console.log('Descrição da condição de pagamento encontrada:', condicaoData.descricao);
-        } else {
-          console.error('Erro ao buscar condição de pagamento, status:', condicaoResponse.status);
-          clienteComCondicaoPagamento.condicaoPagamentoDescricao = 'Erro ao carregar';
-        }
-      } catch (error) {
-        console.error('Erro ao buscar condição de pagamento:', error);
-        clienteComCondicaoPagamento.condicaoPagamentoDescricao = 'Erro ao carregar';
-      }
-    }
-    
-    setClienteSelecionado(clienteComCondicaoPagamento);
+
+  const handleView = async (funcionario) => {
+    setFuncionarioSelecionado(funcionario);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
-    setClienteSelecionado(null);
+    setFuncionarioSelecionado(null);
     setIsModalOpen(false);
   };
-  const clientesFiltrados = clientes.filter(cliente => {
-    // Filtro por texto (código, nome, CPF/CNPJ, email, cidade)
-    const matchesText = cliente.id?.toString().includes(filtro) ||
-      cliente.nome?.toLowerCase().includes(filtro.toLowerCase()) ||
-      cliente.cnpjCpf?.toLowerCase().includes(filtro.toLowerCase()) ||
-      cliente.email?.toLowerCase().includes(filtro.toLowerCase()) ||
-      getCidadeNome(cliente.cidadeId)?.toLowerCase().includes(filtro.toLowerCase());
+
+  const funcionariosFiltrados = funcionarios.filter(funcionario => {
+    // Filtro por texto (código, nome, CPF, email, cidade)
+    const matchesText = funcionario.id?.toString().includes(filtro) ||
+      funcionario.nome?.toLowerCase().includes(filtro.toLowerCase()) ||
+      funcionario.cpfCnpj?.toLowerCase().includes(filtro.toLowerCase()) ||
+      funcionario.email?.toLowerCase().includes(filtro.toLowerCase()) ||
+      getCidadeNome(funcionario.cidadeId)?.toLowerCase().includes(filtro.toLowerCase());
     
     // Filtro por status
     const matchesStatus = filtroStatus === 'todos' || 
-      (filtroStatus === 'ativos' && cliente.ativo) ||
-      (filtroStatus === 'inativos' && !cliente.ativo);
+      (filtroStatus === 'ativos' && funcionario.ativo) ||
+      (filtroStatus === 'inativos' && !funcionario.ativo);
     
     return matchesText && matchesStatus;
   });
-  // As funções de formatação formatTelefone e formatCEP foram movidas para utils/documentValidation.js
-
-  const getTipoLabel = (tipo) => {
-    if (typeof tipo === 'number') {
-      return tipo === 0 ? 'Pessoa Física' : 'Pessoa Jurídica';
-    }
-    return tipo === 'FISICA' ? 'Pessoa Física' : 'Pessoa Jurídica';
-  };
 
   const getSexoLabel = (sexo) => {
     switch (sexo) {
@@ -223,7 +194,7 @@ const ClienteListMUI = () => {
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-        <Typography>Carregando clientes...</Typography>
+        <Typography>Carregando funcionários...</Typography>
       </Box>
     );
   }
@@ -244,7 +215,9 @@ const ClienteListMUI = () => {
           borderRadius: 2,
           overflow: 'hidden'
         }}
-      >        {/* Cabeçalho com pesquisa e botão */}        <Box sx={{ 
+      >
+        {/* Cabeçalho com pesquisa e botão */}
+        <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
@@ -255,7 +228,7 @@ const ClienteListMUI = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
             <TextField
               variant="outlined"
-              placeholder="Pesquisar por código, nome, CPF/CNPJ, email..."
+              placeholder="Pesquisar por código, nome, CPF, email..."
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
               InputProps={{
@@ -308,7 +281,7 @@ const ClienteListMUI = () => {
           </Box>
           <Button
             component={Link}
-            to="/clientes/cadastrar"
+            to="/funcionarios/cadastrar"
             variant="contained"
             startIcon={<AddIcon />}
             sx={{ 
@@ -334,13 +307,14 @@ const ClienteListMUI = () => {
         {/* Tabela */}
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Exibindo {clientesFiltrados.length} de {clientes.length} clientes
+            Exibindo {funcionariosFiltrados.length} de {funcionarios.length} funcionários
             {filtroStatus !== 'todos' && ` (${filtroStatus})`}
           </Typography>
         </Box>
         
         <TableContainer>
-          <Table>            <TableHead>
+          <Table>
+            <TableHead>
               <TableRow sx={{ bgcolor: '#f5f5f5' }}>
                 <TableCell>
                   <TableSortLabel
@@ -359,27 +333,27 @@ const ClienteListMUI = () => {
                     onClick={() => handleSort('nome')}
                     sx={{ fontWeight: 600 }}
                   >
-                    Cliente
+                    Funcionário
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>
                   <TableSortLabel
-                    active={sortConfig.key === 'tipo'}
+                    active={sortConfig.key === 'cargo'}
                     direction={sortConfig.direction}
-                    onClick={() => handleSort('tipo')}
+                    onClick={() => handleSort('cargo')}
                     sx={{ fontWeight: 600 }}
                   >
-                    Tipo
+                    Cargo
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>
                   <TableSortLabel
-                    active={sortConfig.key === 'cnpjCpf'}
+                    active={sortConfig.key === 'cpfCnpj'}
                     direction={sortConfig.direction}
-                    onClick={() => handleSort('cnpjCpf')}
+                    onClick={() => handleSort('cpfCnpj')}
                     sx={{ fontWeight: 600 }}
                   >
-                    CPF/CNPJ
+                    CPF
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>
@@ -416,31 +390,29 @@ const ClienteListMUI = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {clientesFiltrados.map((cliente) => (                <TableRow 
-                  key={cliente.id}
+              {funcionariosFiltrados.map((funcionario) => (
+                <TableRow 
+                  key={funcionario.id}
                   hover
                   sx={{ '&:hover': { bgcolor: '#f8f9fa' } }}
                 >
                   <TableCell>
                     <Typography variant="body2" fontWeight={500} color="primary">
-                      {cliente.id}
+                      {funcionario.id}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Avatar sx={{ width: 32, height: 32, bgcolor: '#1976d2' }}>
-                        {getTipoLabel(cliente.tipo) === 'Pessoa Física' ? 
-                          <PersonIcon fontSize="small" /> : 
-                          <BusinessIcon fontSize="small" />
-                        }
+                        <PersonIcon fontSize="small" />
                       </Avatar>
                       <Box>
                         <Typography variant="body2" fontWeight={500}>
-                          {cliente.nome}
+                          {funcionario.nome}
                         </Typography>
-                        {cliente.apelido && (
+                        {funcionario.apelido && (
                           <Typography variant="caption" color="text.secondary">
-                            {cliente.apelido}
+                            {funcionario.apelido}
                           </Typography>
                         )}
                       </Box>
@@ -448,36 +420,35 @@ const ClienteListMUI = () => {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={getTipoLabel(cliente.tipo)}
+                      label={funcionario.cargo || 'Não informado'}
                       size="small"
-                      color={getTipoLabel(cliente.tipo) === 'Pessoa Física' ? 'primary' : 'secondary'}
+                      color="secondary"
                       variant="outlined"
                     />
-                  </TableCell>                  <TableCell>
+                  </TableCell>
+                  <TableCell>
                     <Typography variant="body2" fontFamily="monospace">
-                      {cliente.cnpjCpf ? (
-                        getTipoLabel(cliente.tipo) === 'Pessoa Física' ? 
-                        (mostrarDocumentoCompleto ? formatCPF(cliente.cnpjCpf) : censurarCPF(cliente.cnpjCpf)) : 
-                        (mostrarDocumentoCompleto ? formatCNPJ(cliente.cnpjCpf) : censurarCNPJ(cliente.cnpjCpf))
+                      {funcionario.cpfCnpj ? (
+                        mostrarDocumentoCompleto ? formatCPF(funcionario.cpfCnpj) : censurarCPF(funcionario.cpfCnpj)
                       ) : 'Não informado'}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {cliente.email || 'Não informado'}
+                      {funcionario.email || 'Não informado'}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {getCidadeNome(cliente.cidadeId)}
+                      {getCidadeNome(funcionario.cidadeId)}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={cliente.ativo ? 'Ativo' : 'Inativo'}
+                      label={funcionario.ativo ? 'Ativo' : 'Inativo'}
                       size="small"
-                      color={cliente.ativo ? 'success' : 'default'}
-                      variant={cliente.ativo ? 'filled' : 'outlined'}
+                      color={funcionario.ativo ? 'success' : 'default'}
+                      variant={funcionario.ativo ? 'filled' : 'outlined'}
                     />
                   </TableCell>
                   <TableCell>
@@ -485,7 +456,7 @@ const ClienteListMUI = () => {
                       <Tooltip title="Visualizar">
                         <IconButton
                           size="small"
-                          onClick={() => handleView(cliente)}
+                          onClick={() => handleView(funcionario)}
                           sx={{ color: '#17a2b8' }}
                         >
                           <VisibilityIcon fontSize="small" />
@@ -495,19 +466,19 @@ const ClienteListMUI = () => {
                         <IconButton
                           size="small"
                           component={Link}
-                          to={`/clientes/editar/${cliente.id}`}
+                          to={`/funcionarios/editar/${funcionario.id}`}
                           sx={{ color: '#28a745' }}
                         >
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={cliente.ativo ? "Excluir" : "Ativar"}>
+                      <Tooltip title={funcionario.ativo ? "Excluir" : "Ativar"}>
                         <IconButton
                           size="small"
-                          onClick={() => handleDelete(cliente.id)}
-                          sx={{ color: cliente.ativo ? '#dc3545' : '#28a745' }}
+                          onClick={() => handleDelete(funcionario.id)}
+                          sx={{ color: funcionario.ativo ? '#dc3545' : '#28a745' }}
                         >
-                          {cliente.ativo ? <BlockIcon fontSize="small" /> : <CheckCircleIcon fontSize="small" />}
+                          {funcionario.ativo ? <BlockIcon fontSize="small" /> : <CheckCircleIcon fontSize="small" />}
                         </IconButton>
                       </Tooltip>
                     </Box>
@@ -518,12 +489,12 @@ const ClienteListMUI = () => {
           </Table>
         </TableContainer>
 
-        {clientesFiltrados.length === 0 && (
+        {funcionariosFiltrados.length === 0 && (
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="h6" color="text.secondary">
-              {clientes.length === 0 
-                ? 'Nenhum cliente cadastrado' 
-                : `Nenhum cliente ${filtroStatus === 'todos' ? '' : filtroStatus === 'ativos' ? 'ativo' : 'inativo'} encontrado`
+              {funcionarios.length === 0 
+                ? 'Nenhum funcionário cadastrado' 
+                : `Nenhum funcionário ${filtroStatus === 'todos' ? '' : filtroStatus === 'ativos' ? 'ativo' : 'inativo'} encontrado`
               }
             </Typography>
             {filtro && (
@@ -533,7 +504,9 @@ const ClienteListMUI = () => {
             )}
           </Box>
         )}
-      </Paper>      {/* Modal de Visualização */}
+      </Paper>
+
+      {/* Modal de Visualização */}
       <Dialog
         open={isModalOpen}
         onClose={handleCloseModal}
@@ -551,14 +524,14 @@ const ClienteListMUI = () => {
           pb: 2
         }}>
           <Typography variant="h6" fontWeight={600}>
-            Visualizar Cliente
+            Visualizar Funcionário
           </Typography>
           <IconButton onClick={handleCloseModal} size="small">
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         
-        {clienteSelecionado && (
+        {funcionarioSelecionado && (
           <DialogContent sx={{ p: 4 }}>
             {/* Cabeçalho com título e switch Ativo */}
             <Box sx={{ 
@@ -574,12 +547,13 @@ const ClienteListMUI = () => {
                 align="center" 
                 sx={{ color: '#333', fontWeight: 600, flex: 1 }}
               >
-                Dados do Cliente
-              </Typography>              <Box sx={{ width: 120, display: 'flex', justifyContent: 'flex-end' }}>
+                Dados do Funcionário
+              </Typography>
+              <Box sx={{ width: 120, display: 'flex', justifyContent: 'flex-end' }}>
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={clienteSelecionado.ativo}
+                      checked={funcionarioSelecionado.ativo}
                       disabled
                       color="primary"
                     />
@@ -590,72 +564,61 @@ const ClienteListMUI = () => {
               </Box>
             </Box>
 
-            {/* Linha 1: Código, Tipo de Pessoa, Nome, Apelido, Estado Civil */}
+            {/* Linha 1: Código, Nome, Apelido, Cargo */}
             <Grid container spacing={2} alignItems="center" sx={{ mb: 4 }}>
               <Grid item sx={{ width: '6%', minWidth: 80 }}>
                 <TextField
                   fullWidth
                   size="small"
                   label="Código"
-                  value={clienteSelecionado.id || ''}
+                  value={funcionarioSelecionado.id || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
 
-              <Grid item sx={{ width: '16%', minWidth: 140 }}>
+              <Grid item sx={{ width: '35%' }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Tipo de Pessoa"
-                  value={getTipoLabel(clienteSelecionado.tipo)}
+                  label="Funcionário"
+                  value={funcionarioSelecionado.nome || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
 
-              <Grid item sx={{ width: '30%' }}>
+              <Grid item sx={{ width: '15%' }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Cliente"
-                  value={clienteSelecionado.nome || ''}
-                  InputProps={{ readOnly: true }}
-                  variant="outlined"
-                />
-              </Grid>              <Grid item sx={{ width: getTipoLabel(clienteSelecionado.tipo) === 'Pessoa Física' ? '18%' : '38%' }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label={getTipoLabel(clienteSelecionado.tipo) === 'Pessoa Física' ? 'Apelido' : 'Nome Fantasia'}
-                  value={clienteSelecionado.apelido || ''}
+                  label="Apelido"
+                  value={funcionarioSelecionado.apelido || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
 
-              {getTipoLabel(clienteSelecionado.tipo) === 'Pessoa Física' && (
-                <Grid item sx={{ width: '20%' }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Estado Civil"
-                    value={getEstadoCivilLabel(clienteSelecionado.estadoCivil)}
-                    InputProps={{ readOnly: true }}
-                    variant="outlined"
-                  />
-                </Grid>
-              )}
+              <Grid item sx={{ width: '25%' }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Cargo"
+                  value={funcionarioSelecionado.cargo || ''}
+                  InputProps={{ readOnly: true }}
+                  variant="outlined"
+                />
+              </Grid>
             </Grid>
 
-            {/* Linha 2: Rua, Número, Complemento, Bairro, CEP, Cidade */}
+            {/* Linha 2: Endereço, Número, Complemento, Bairro, CEP, Cidade */}
             <Grid container spacing={2} sx={{ mb: 4 }}>
               <Grid item sx={{ width: '25%' }}>
                 <TextField
                   fullWidth
                   size="small"
                   label="Endereço"
-                  value={clienteSelecionado.endereco || ''}
+                  value={funcionarioSelecionado.endereco || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -666,7 +629,7 @@ const ClienteListMUI = () => {
                   fullWidth
                   size="small"
                   label="Número"
-                  value={clienteSelecionado.numero || ''}
+                  value={funcionarioSelecionado.numero || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -677,7 +640,7 @@ const ClienteListMUI = () => {
                   fullWidth
                   size="small"
                   label="Complemento"
-                  value={clienteSelecionado.complemento || ''}
+                  value={funcionarioSelecionado.complemento || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -688,7 +651,7 @@ const ClienteListMUI = () => {
                   fullWidth
                   size="small"
                   label="Bairro"
-                  value={clienteSelecionado.bairro || ''}
+                  value={funcionarioSelecionado.bairro || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -699,7 +662,7 @@ const ClienteListMUI = () => {
                   fullWidth
                   size="small"
                   label="CEP"
-                  value={formatCEP(clienteSelecionado.cep) || ''}
+                  value={formatCEP(funcionarioSelecionado.cep) || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -710,19 +673,21 @@ const ClienteListMUI = () => {
                   fullWidth
                   size="small"
                   label="Cidade"
-                  value={getCidadeNome(clienteSelecionado.cidadeId)}
+                  value={getCidadeNome(funcionarioSelecionado.cidadeId)}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
-            </Grid>            {/* Linha 3: Telefone, Email, Sexo (somente para PF), Data de Nascimento */}
+            </Grid>
+
+            {/* Linha 3: Telefone, Email, Sexo, Data de Nascimento, Estado Civil */}
             <Grid container spacing={2} sx={{ mb: 4 }}>
               <Grid item sx={{ width: '15%', minWidth: 150 }}>
                 <TextField
                   fullWidth
                   size="small"
                   label="Telefone"
-                  value={formatTelefone(clienteSelecionado.telefone) || ''}
+                  value={formatTelefone(funcionarioSelecionado.telefone) || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -733,31 +698,30 @@ const ClienteListMUI = () => {
                   fullWidth
                   size="small"
                   label="Email"
-                  value={clienteSelecionado.email || ''}
+                  value={funcionarioSelecionado.email || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
 
-              {getTipoLabel(clienteSelecionado.tipo) === 'Pessoa Física' && (
-                <Grid item sx={{ width: '10%', minWidth: 120 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Sexo"
-                    value={getSexoLabel(clienteSelecionado.sexo)}
-                    InputProps={{ readOnly: true }}
-                    variant="outlined"
-                  />
-                </Grid>
-              )}
+              <Grid item sx={{ width: '10%', minWidth: 120 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Sexo"
+                  value={getSexoLabel(funcionarioSelecionado.sexo)}
+                  InputProps={{ readOnly: true }}
+                  variant="outlined"
+                />
+              </Grid>
+
               <Grid item sx={{ width: '15%', minWidth: 150 }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label={getTipoLabel(clienteSelecionado.tipo) === 'Pessoa Física' ? 'Data de Nascimento' : 'Data de Abertura'}
-                  value={clienteSelecionado.dataNascimento ? 
-                    new Date(clienteSelecionado.dataNascimento).toLocaleDateString('pt-BR') : 
+                  label="Data de Nascimento"
+                  value={funcionarioSelecionado.dataNascimento ? 
+                    new Date(funcionarioSelecionado.dataNascimento).toLocaleDateString('pt-BR') : 
                     ''
                   }
                   InputProps={{ readOnly: true }}
@@ -765,40 +729,77 @@ const ClienteListMUI = () => {
                 />
               </Grid>
 
+              <Grid item sx={{ width: '20%' }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Estado Civil"
+                  value={getEstadoCivilLabel(funcionarioSelecionado.estadoCivil)}
+                  InputProps={{ readOnly: true }}
+                  variant="outlined"
+                />
+              </Grid>
+            </Grid>
 
-            </Grid>            {/* Linha 4: RG/IE, CPF/CNPJ, Limite de Crédito, Condição de Pagamento */}
+            {/* Linha 4: CPF, RG, CNH, Validade CNH */}
             <Grid container spacing={2} sx={{ mb: 4 }}>
-                <Grid item sx={{ width: '20%' }}>
+              <Grid item sx={{ width: '20%', minWidth: 150 }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label={getTipoLabel(clienteSelecionado.tipo) === 'Pessoa Física' ? 'RG' : 'Inscrição Estadual'}
-                  value={clienteSelecionado.rgInscricaoEstadual || ''}
-                  InputProps={{ readOnly: true }}
-                  variant="outlined"
-                />
-              </Grid>              <Grid item sx={{ width: '20%', minWidth: 150 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label={getTipoLabel(clienteSelecionado.tipo) === 'Pessoa Física' ? 'CPF' : 'CNPJ'}
-                  value={clienteSelecionado.cnpjCpf ? (
-                    getTipoLabel(clienteSelecionado.tipo) === 'Pessoa Física' ? 
-                    formatCPF(clienteSelecionado.cnpjCpf) : 
-                    formatCNPJ(clienteSelecionado.cnpjCpf)
-                  ) : ''}
+                  label="CPF"
+                  value={funcionarioSelecionado.cpfCnpj ? formatCPF(funcionarioSelecionado.cpfCnpj) : ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
               </Grid>
 
-              <Grid item sx={{ width: '15%', minWidth: 120 }}>
+              <Grid item sx={{ width: '20%', minWidth: 150 }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Limite de Crédito"
-                  value={clienteSelecionado.limiteCredito ? 
-                    `R$ ${parseFloat(clienteSelecionado.limiteCredito).toFixed(2).replace('.', ',')}` : 
+                  label="RG"
+                  value={funcionarioSelecionado.rgInscricaoEstadual || ''}
+                  InputProps={{ readOnly: true }}
+                  variant="outlined"
+                />
+              </Grid>
+
+              <Grid item sx={{ width: '20%' }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="CNH"
+                  value={funcionarioSelecionado.cnh || ''}
+                  InputProps={{ readOnly: true }}
+                  variant="outlined"
+                />
+              </Grid>
+
+              <Grid item sx={{ width: '20%' }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Validade CNH"
+                  value={funcionarioSelecionado.dataValidadeCnh ? 
+                    new Date(funcionarioSelecionado.dataValidadeCnh).toLocaleDateString('pt-BR') : 
+                    ''
+                  }
+                  InputProps={{ readOnly: true }}
+                  variant="outlined"
+                />
+              </Grid>
+            </Grid>
+
+            {/* Linha 5: Data de Admissão, Salário, Data de Demissão */}
+            <Grid container spacing={2} sx={{ mb: 4 }}>
+              <Grid item sx={{ width: '20%', minWidth: 150 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Data de Admissão"
+                  value={funcionarioSelecionado.dataAdmissao ? 
+                    new Date(funcionarioSelecionado.dataAdmissao).toLocaleDateString('pt-BR') : 
                     ''
                   }
                   InputProps={{ readOnly: true }}
@@ -806,16 +807,36 @@ const ClienteListMUI = () => {
                 />
               </Grid>
 
-              <Grid item sx={{ width: '35%' }}>
+              <Grid item sx={{ width: '20%' }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Condição de Pagamento"
-                  value={clienteSelecionado.condicaoPagamentoDescricao || ''}
+                  label="Salário"
+                  value={funcionarioSelecionado.salario ? 
+                    `R$ ${parseFloat(funcionarioSelecionado.salario).toFixed(2).replace('.', ',')}` : 
+                    ''
+                  }
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
-              </Grid>            </Grid>            {/* Linha 5: Observações */}
+              </Grid>
+
+              <Grid item sx={{ width: '20%', minWidth: 150 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Data de Demissão"
+                  value={funcionarioSelecionado.dataDemissao ? 
+                    new Date(funcionarioSelecionado.dataDemissao).toLocaleDateString('pt-BR') : 
+                    ''
+                  }
+                  InputProps={{ readOnly: true }}
+                  variant="outlined"
+                />
+              </Grid>
+            </Grid>
+
+            {/* Linha 6: Observações */}
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item sx={{width: '100%'}}>
                 <TextField
@@ -824,7 +845,7 @@ const ClienteListMUI = () => {
                   rows={3}
                   size="small"
                   label="Observações"
-                  value={clienteSelecionado.observacao || ''}
+                  value={funcionarioSelecionado.observacao || ''}
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
@@ -844,14 +865,14 @@ const ClienteListMUI = () => {
               }}
             >
               <Stack spacing={0.5} sx={{ flex: 1 }}>
-                {clienteSelecionado.dataCadastro && (
+                {funcionarioSelecionado.dataCriacao && (
                   <Typography variant="caption" color="text.secondary">
-                    Data de cadastro: {new Date(clienteSelecionado.dataCadastro).toLocaleString('pt-BR')}
+                    Data de cadastro: {new Date(funcionarioSelecionado.dataCriacao).toLocaleString('pt-BR')}
                   </Typography>
                 )}
-                {clienteSelecionado.ultimaModificacao && (
+                {funcionarioSelecionado.dataAlteracao && (
                   <Typography variant="caption" color="text.secondary">
-                    Última modificação: {new Date(clienteSelecionado.ultimaModificacao).toLocaleString('pt-BR')}
+                    Última modificação: {new Date(funcionarioSelecionado.dataAlteracao).toLocaleString('pt-BR')}
                   </Typography>
                 )}
               </Stack>
@@ -867,10 +888,10 @@ const ClienteListMUI = () => {
           >
             Fechar
           </Button>
-          {clienteSelecionado && (
+          {funcionarioSelecionado && (
             <Button
               component={Link}
-              to={`/clientes/editar/${clienteSelecionado.id}`}
+              to={`/funcionarios/editar/${funcionarioSelecionado.id}`}
               variant="contained"
               startIcon={<EditIcon />}
               onClick={handleCloseModal}
@@ -884,4 +905,4 @@ const ClienteListMUI = () => {
   );
 };
 
-export default ClienteListMUI;
+export default FuncionarioListMUI;
