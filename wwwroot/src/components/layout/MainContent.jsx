@@ -39,7 +39,6 @@ const MainContent = () => {
   return (
     <main>      
     <Routes>
-        {/* Rota padrão - redireciona para dashboard */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         
         {/* Dashboard */}
