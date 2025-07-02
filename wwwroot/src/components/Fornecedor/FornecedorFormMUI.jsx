@@ -238,7 +238,6 @@ const FornecedorForm = () => {
     }
   };
 
-  // Função específica para campos numéricos com máscara
   const handleNumericChange = (e, maxLength, maskFunction) => {
     const { name } = e.target;
     let value = e.target.value.replace(/[^0-9]/g, '');
@@ -247,7 +246,6 @@ const FornecedorForm = () => {
       value = value.substring(0, maxLength);
     }
     
-    // Limpa o erro do campo quando o usuário começar a digitar
     if (fieldErrors[name]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -256,11 +254,9 @@ const FornecedorForm = () => {
       });
     }
     
-    // Armazena o valor limpo no estado
     setFornecedor({ ...fornecedor, [name]: value });
   };
 
-  // Função para obter valor formatado para exibição
   const getDisplayValue = (fieldName, value) => {
     if (!value) return '';
     
@@ -275,7 +271,6 @@ const FornecedorForm = () => {
         if (fornecedor.tipo === 'FISICA') {
           return formatRG(value);
         } else {
-          // Para IE: se contém apenas números, formata; senão retorna como está (ex: "ISENTO")
           if (/^\d+$/.test(value)) {
             return formatIE(value);
           } else {
@@ -287,31 +282,25 @@ const FornecedorForm = () => {
     }
   };
 
-  // Função específica para RG/IE (permite texto quando pessoa física para IE poder ser "ISENTO")
   const handleRgChange = (e) => {
     const { name } = e.target;
     let value = e.target.value;
     
     if (fornecedor.tipo === 'FISICA') {
-      // Para RG: permite números e X apenas no final
       value = value.replace(/[^0-9Xx]/g, '').toUpperCase();
       if (value.includes('X') && value.indexOf('X') !== value.length - 1) {
         value = value.replace(/X/g, '');
       }
-      // Limita a 9 caracteres para RG
       if (value.length > 9) {
         value = value.substring(0, 9);
       }
     } else {
-      // Para IE: permite texto (para "ISENTO") ou números
       value = value.toUpperCase();
-      // Limita a 20 caracteres para IE
       if (value.length > 20) {
         value = value.substring(0, 20);
       }
     }
     
-    // Limpa o erro do campo quando o usuário começar a digitar
     if (fieldErrors[name]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -326,10 +315,8 @@ const FornecedorForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Limpa erros anteriores
     setFieldErrors({});
     setErrorMessage('');
-      // Validação de campos obrigatórios
     const errors = {};
     
     if (!fornecedor.razaoSocial?.trim()) {
@@ -362,20 +349,16 @@ const FornecedorForm = () => {
       errors.email = 'Email inválido';
     }
     
-    // CPF/CNPJ não é validado como obrigatório aqui pois depende se é fornecedor brasileiro ou estrangeiro
-    // A validação será feita pelo backend
     
     if (!fornecedor.cidadeId) {
       errors.cidade = 'Selecione uma cidade';
     }
     
-    // Se há erros, exibe e para a execução
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
     }
     
-    // Validação do telefone (deve ter 10 ou 11 dígitos)
     const telefoneSemMascara = fornecedor.telefone?.replace(/\D/g, '') || '';
     if (telefoneSemMascara.length !== 0 && (telefoneSemMascara.length < 10 || telefoneSemMascara.length > 11)) {
       setFieldErrors(prev => ({
@@ -385,7 +368,6 @@ const FornecedorForm = () => {
       return;
     }
     
-    // Validação do CEP (deve ter 8 dígitos)
     const cepSemMascara = fornecedor.cep?.replace(/\D/g, '') || '';
     if (cepSemMascara.length !== 0 && cepSemMascara.length !== 8) {
       setFieldErrors(prev => ({
@@ -394,18 +376,14 @@ const FornecedorForm = () => {
       }));
       return;
     }
-      // Validação do CPF/CNPJ (apenas para cidades brasileiras)
     const cpfCnpjSemMascara = fornecedor.cpfCnpj?.replace(/\D/g, '') || '';
     const isCpf = fornecedor.tipo === 'FISICA';
     const tamanhoEsperado = isCpf ? 11 : 14;
     
-    // Verifica se a cidade é brasileira (se o país contém "Brasil" no nome)
     const isCidadeBrasileira = fornecedor.cidadeEstadoPais?.toLowerCase().includes('brasil') === true;
     
-    // Só valida CPF/CNPJ se tiver conteúdo OU se for cidade brasileira
     if (cpfCnpjSemMascara.length !== 0 || isCidadeBrasileira) {
       if (cpfCnpjSemMascara.length !== 0) {
-        // Verifica o tamanho primeiro
         if (cpfCnpjSemMascara.length !== tamanhoEsperado) {
           setFieldErrors(prev => ({
             ...prev,
@@ -415,7 +393,6 @@ const FornecedorForm = () => {
           return;
         }
         
-        // Valida o CPF ou CNPJ
         const isDocumentoValido = isCpf ? validarCPF(cpfCnpjSemMascara) : validarCNPJ(cpfCnpjSemMascara);
         
         if (!isDocumentoValido) {
@@ -423,11 +400,9 @@ const FornecedorForm = () => {
             ...prev,
             cpfCnpj: `${isCpf ? 'CPF' : 'CNPJ'} inválido. Verifique os dígitos informados.`
           }));
-        //  setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
           return;
         }
       } else if (isCidadeBrasileira) {
-        // Se é cidade brasileira mas não tem CPF/CNPJ, mostra aviso
         setFieldErrors(prev => ({
           ...prev,
           cpfCnpj: `${isCpf ? 'CPF' : 'CNPJ'} é obrigatório para fornecedores brasileiros.`
@@ -436,7 +411,6 @@ const FornecedorForm = () => {
       }
     }
 
-    // Validação do limite de crédito
     if (fornecedor.limiteCredito && parseFloat(fornecedor.limiteCredito) > 15000) {
       setFieldErrors(prev => ({
         ...prev,
@@ -445,21 +419,14 @@ const FornecedorForm = () => {
       return;
     }
 
-    // Formatando os dados para corresponder ao modelo esperado pelo backend
     const fornecedorFormatado = {
       ...fornecedor,
-      // Convertendo valores numéricos
       limiteCredito: fornecedor.limiteCredito ? parseFloat(fornecedor.limiteCredito) : null,
       limiteCredito2: fornecedor.limiteCredito2 ? parseFloat(fornecedor.limiteCredito2) : null,
-      // Convertendo tipo para Integer (conforme backend)
-      tipo: fornecedor.tipo === 'FISICA' ? 0 : 1, // 0 = FISICA, 1 = JURIDICA
-      // Sexo é uma String no backend, então enviamos diretamente
+      tipo: fornecedor.tipo === 'FISICA' ? 0 : 1, // 0  FISICA, 1  JURIDICA
       sexo: fornecedor.sexo, // 'M' ou 'F'
-      // Estado civil é uma String no backend, então enviamos diretamente
       estadoCivil: fornecedor.estadoCivil,
-      // Garantindo que os campos obrigatórios não estejam vazios
       dataNascimento: fornecedor.dataNascimento || null,
-      // CPF/CNPJ: envia null se estiver vazio para evitar problemas de duplicação
       cpfCnpj: fornecedor.cpfCnpj?.trim() || null,
     };
 
@@ -483,17 +450,14 @@ const FornecedorForm = () => {
             let error;
             let errorObj = null;
             try {
-              // Tenta converter a resposta para JSON para extrair a mensagem de erro
               errorObj = JSON.parse(text);
               error = errorObj.erro || errorObj.message || 'Erro desconhecido ao salvar fornecedor';
               console.error('Resposta do servidor:', errorObj);
             } catch (e) {
-              // Se não for um JSON válido, usa o texto puro
               error = text || 'Erro ao salvar fornecedor';
               console.error('Resposta do servidor (texto):', text);
             }
             
-            // Se for um erro relacionado ao CPF/CNPJ, exibe no campo específico
             if (errorObj && errorObj.erro) {
               const errorMessage = errorObj.erro;
               if (errorMessage.includes('CNPJ/CPF') || errorMessage.includes('CPF') || errorMessage.includes('CNPJ')) {
@@ -501,7 +465,6 @@ const FornecedorForm = () => {
                   ...prev,
                   cpfCnpj: errorMessage
                 }));
-                // Não define errorMessage geral para que a mensagem apareça apenas no campo
                 throw new Error('');
               }
             }
@@ -516,7 +479,6 @@ const FornecedorForm = () => {
       })
       .catch((error) => {
         console.error('Erro capturado:', error);
-        // Só exibe mensagem geral se não for um erro de campo específico
         if (error.message.trim()) {
           setErrorMessage(error.message);
         }
@@ -536,7 +498,6 @@ const FornecedorForm = () => {
   };
 
   const handleCidadeSelecionada = (cidade) => {
-    // Limpa o erro da cidade quando uma cidade for selecionada
     if (fieldErrors.cidade) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -545,7 +506,6 @@ const FornecedorForm = () => {
       });
     }
     
-    // Buscar informações do estado e país
     const estado = estados.find(e => e.id === cidade.estadoId);
     const pais = estado ? paises.find(p => p.id === parseInt(estado.paisId)) : null;
     
@@ -581,7 +541,7 @@ const FornecedorForm = () => {
       padding: { xs: 2, md: 3 }, 
       bgcolor: '#f8f9fa', 
       minHeight: '100vh',
-      paddingBottom: 0.5 // Reduzido de 1 para 0.5
+      paddingBottom: 0.5
     }}>
       <Paper 
         component="form"
@@ -593,7 +553,7 @@ const FornecedorForm = () => {
           minHeight: '70vh',
           mx: 'auto',
           p: { xs: 2, md: 3, lg: 4 },
-          pb: 0, // Removido padding bottom para aproximar mais da margem inferior
+          pb: 0,
           borderRadius: 2,
           overflow: 'hidden',
           position: 'relative',
@@ -607,17 +567,16 @@ const FornecedorForm = () => {
           }
         }}
       >
-        {/* Cabeçalho com título e switch Ativo */}
+        {/* Cabeçalho */}
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
           mb: 4 
         }}>
-          {/* Espaço vazio à esquerda para centralizar o título */}
           <Box sx={{ width: 120 }}></Box>
           
-          {/* Título centralizado */}
+          {/* Título */}
           <Typography 
             variant="h5" 
             component="h1" 
@@ -626,7 +585,7 @@ const FornecedorForm = () => {
           >
             {id ? 'Editar Fornecedor' : 'Cadastrar Novo Fornecedor'}
           </Typography>
-            {/* Switch Ativo à direita */}
+            {/* switch */}
           <Box sx={{ width: 120, display: 'flex', justifyContent: 'flex-end' }}>
             <FormControlLabel
               control={
@@ -635,7 +594,7 @@ const FornecedorForm = () => {
                   onChange={handleChange}
                   name="ativo"
                   color="primary"
-                  disabled={!id} // Desabilita durante cadastro (quando não há id)
+                  disabled={!id}
                 />
               }
               label="Ativo"
@@ -644,7 +603,7 @@ const FornecedorForm = () => {
           </Box>
         </Box>
 
-        {/* Linha 1: Código, Tipo de Pessoa, Fornecedor, Apelido, Estado Civil */}
+        {/* Linha 1 */}
         <Grid container spacing={2} alignItems="center" sx={{ mb: 4 }}>
           <Grid item sx={{ width: '6%', minWidth: 80 }}>
             <TextField
@@ -727,7 +686,7 @@ const FornecedorForm = () => {
           )}
         </Grid>
 
-        {/* Linha 2: Rua, Número, Complemento, Bairro, CEP, Cidade */}
+        {/* Linha 2*/}
         <Grid container spacing={2} sx={{ mb: 4 }}>
           <Grid item sx={{ width: '25%' }}>
             <TextField
@@ -847,7 +806,7 @@ const FornecedorForm = () => {
           </Grid>
         </Grid>
 
-        {/* Linha 3: Telefone, Email, Sexo, Data de Nascimento */}
+        {/* Linha 3 */}
         <Grid container spacing={2} sx={{ mb: 4 }}>
           <Grid item sx={{ width: '20%', minWidth: 150 }}>
             <TextField
@@ -921,7 +880,7 @@ const FornecedorForm = () => {
           </Grid>
         </Grid>
 
-        {/* Linha 4: CPF/CNPJ, RG/Inscrição Estadual, Limite de Crédito, Condição de Pagamento */}
+        {/* Linha 4 */}
         <Grid container spacing={2} sx={{ mb: 4 }}>
           <Grid item sx={{ width: fornecedor.tipo === 'FISICA' ? '15%' : '20%', minWidth: 150 }}>
             <TextField
@@ -1018,13 +977,13 @@ const FornecedorForm = () => {
           </Grid>
         </Grid>
 
-        {/* Linha 5: Observação */}
+        {/* Linha 5 */}
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item sx={{ width: '100%' }}>
             <TextField
               fullWidth
               multiline
-              rows={3} // Reduzido de 4 para 3 linhas
+              rows={3} 
               size="small"
               label="Observações"
               name="observacao"
@@ -1036,7 +995,7 @@ const FornecedorForm = () => {
           </Grid>
         </Grid>
 
-        {/* Mensagem de erro */}
+        {/* erro */}
         {errorMessage && (
           <Alert 
             severity="error" 
@@ -1048,7 +1007,7 @@ const FornecedorForm = () => {
           </Alert>
         )}
 
-        {/* Botões e Informações de registro */}
+        {/* Botões */}
         <Box
           sx={{
             display: 'flex',
@@ -1059,14 +1018,14 @@ const FornecedorForm = () => {
             pt: 2,
             borderTop: '1px solid #eee',
             position: 'sticky',
-            bottom: '5px', // Reduzido de 10px para 5px
+            bottom: '5px',
             backgroundColor: 'white',
             zIndex: 10,
-            pb: 0.5, // Reduzido de 1 para 0.5
+            pb: 0.5,
             boxShadow: '0px -4px 8px rgba(0, 0, 0, 0.05)'
           }}
         >
-          {/* Informações de registro - lado esquerdo */}
+          {/*registro */}
           <Stack spacing={0.5} sx={{ flex: 1 }}>
             {fornecedor.dataCadastro && (
               <Typography variant="caption" color="text.secondary">
@@ -1080,7 +1039,7 @@ const FornecedorForm = () => {
             )}
           </Stack>
 
-          {/* Botões - lado direito */}
+          {/* Botões */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
               variant="contained"
@@ -1105,7 +1064,7 @@ const FornecedorForm = () => {
         </Box>
       </Paper>
 
-      {/* Modal de seleção de cidades */}
+      {/* Modal cidades */}
       {isCidadeModalOpen && (
         <CidadeModal
           onClose={handleCloseCidadeModal}
@@ -1113,7 +1072,7 @@ const FornecedorForm = () => {
         />
       )}
       
-      {/* Modal de seleção de condições de pagamento */}
+      {/* Modal cond pag */}
       {isCondicaoPagamentoModalOpen && (
         <CondicaoPagamentoModal
           onClose={handleCloseCondicaoPagamentoModal}
