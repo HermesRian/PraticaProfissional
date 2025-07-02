@@ -12,25 +12,22 @@ const CondicaoPagamentoForm = () => {
     ativo: true,
   });
 
-  const [formasPagamento, setFormasPagamento] = useState([]); // Lista de formas de pagamento
-  const [numeroParcelas, setNumeroParcelas] = useState(''); // Número de parcelas a serem geradas
-  const [erroPercentual, setErroPercentual] = useState(false); // Controle de erro na soma dos percentuais
+  const [formasPagamento, setFormasPagamento] = useState([]);
+  const [numeroParcelas, setNumeroParcelas] = useState('');
+  const [erroPercentual, setErroPercentual] = useState(false); 
   const navigate = useNavigate();
   const { id } = useParams();
 
   useEffect(() => {
-    // Buscar formas de pagamento
     fetch('http://localhost:8080/formas-pagamento')
       .then((response) => response.json())
       .then((data) => setFormasPagamento(data))
       .catch((error) => console.error('Erro ao buscar formas de pagamento:', error));
 
-    // Buscar condição de pagamento para edição
     if (id) {
       fetch(`http://localhost:8080/condicoes-pagamento/${id}`)
         .then((response) => response.json())
         .then((data) => {
-          // Garantir que parcelas seja um array e inicializar valores padrão
           const condicaoPagamentoComValoresPadrao = {
             descricao: data.descricao || '',
             dias: data.dias || '',
@@ -43,7 +40,7 @@ const CondicaoPagamentoForm = () => {
             juros_percentual: data.jurosPercentual || '',
             multa_percentual: data.multaPercentual || '',
             desconto_percentual: data.descontoPercentual || '',
-            ativo: data.ativo ?? true, // Garantir que "ativo" seja boolean
+            ativo: data.ativo ?? true,
           };
           setCondicaoPagamento(condicaoPagamentoComValoresPadrao);
         })
@@ -80,7 +77,6 @@ const CondicaoPagamentoForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
   
-    // Validar se os dias das parcelas estão dentro do prazo total da condição
     const diasCondicao = parseInt(condicaoPagamento.dias, 10) || 0;
     const parcelasInvalidas = condicaoPagamento.parcelas.some(
       (parcela) => parseInt(parcela.dias, 10) > diasCondicao
@@ -103,11 +99,10 @@ const CondicaoPagamentoForm = () => {
       ? `http://localhost:8080/condicoes-pagamento/${id}`
       : 'http://localhost:8080/condicoes-pagamento';
   
-    // Transformar o estado no formato esperado pelo backend
     const payload = {
       descricao: condicaoPagamento.descricao,
-      dias: parseInt(condicaoPagamento.dias, 10) || 0, // Garantir que "dias" seja um número
-      parcelas: condicaoPagamento.parcelas.length, // Número de parcelas
+      dias: parseInt(condicaoPagamento.dias, 10) || 0,
+      parcelas: condicaoPagamento.parcelas.length,
       ativo: condicaoPagamento.ativo,
       jurosPercentual: parseFloat(condicaoPagamento.juros_percentual) || 0,
       multaPercentual: parseFloat(condicaoPagamento.multa_percentual) || 0,
@@ -120,7 +115,6 @@ const CondicaoPagamentoForm = () => {
       })),
     };
   
-    // Log do payload para depuração
     console.log('Payload enviado:', payload);
   
     fetch(url, {
@@ -342,7 +336,7 @@ const CondicaoPagamentoForm = () => {
           ))}
 
         {erroPercentual && (
-          <p style={{ color: 'red' }}>Como assim? A soma dos percentuais deve ser igual a 100%.</p>
+          <p style={{ color: 'red' }}>A soma dos percentuais deve ser igual a 100%.</p>
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-// Importações do Material-UI
 import {
   Box,
   Typography,
@@ -42,10 +41,8 @@ const FuncaoFuncionarioFormMUI = () => {
           
           const funcaoAtualizada = {
             ...data,
-            // Mapear campos de data do backend
             dataCadastro: data.dataCadastro || '',
             ultimaModificacao: data.ultimaModificacao || '',
-            // Garantir que campos Boolean tenham valores padrão
             ativo: data.ativo !== null && data.ativo !== undefined ? data.ativo : true,
             requerCnh: data.requerCnh !== null && data.requerCnh !== undefined ? data.requerCnh : false,
           };
@@ -59,7 +56,6 @@ const FuncaoFuncionarioFormMUI = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     
-    // Limpa o erro do campo quando o usuário começar a digitar
     if (fieldErrors[name]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -74,11 +70,9 @@ const FuncaoFuncionarioFormMUI = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Limpa erros anteriores
     setFieldErrors({});
     setErrorMessage('');
     
-    // Validação de campos obrigatórios
     const errors = {};
     
     if (!funcaoFuncionario.nome?.trim()) {
@@ -89,17 +83,14 @@ const FuncaoFuncionarioFormMUI = () => {
       errors.descricao = 'Este campo é obrigatório';
     }
     
-    // Se há erros, exibe e para a execução
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setErrorMessage('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
-    // Formatando os dados para corresponder ao modelo esperado pelo backend
     const funcaoFormatada = {
       ...funcaoFuncionario,
-      // Convertendo valores numéricos
       cargaHoraria: funcaoFuncionario.cargaHoraria ? parseFloat(funcaoFuncionario.cargaHoraria) : null,
     };
 
@@ -176,17 +167,16 @@ const FuncaoFuncionarioFormMUI = () => {
           }
         }}
       >
-        {/* Cabeçalho com título e switch Ativo */}
+        {/* Cabeçalho */}
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
           mb: 4 
         }}>
-          {/* Espaço vazio à esquerda para centralizar o título */}
           <Box sx={{ width: 120 }}></Box>
           
-          {/* Título centralizado */}
+          {/* Título  */}
           <Typography 
             variant="h5" 
             component="h1" 
@@ -196,7 +186,7 @@ const FuncaoFuncionarioFormMUI = () => {
             {id ? 'Editar Cargo' : 'Cadastrar Novo Cargo'}
           </Typography>
           
-          {/* Switch Ativo à direita */}
+          {/* Switch */}
           <Box sx={{ width: 120, display: 'flex', justifyContent: 'flex-end' }}>
             <FormControlLabel
               control={
@@ -205,7 +195,7 @@ const FuncaoFuncionarioFormMUI = () => {
                   onChange={handleChange}
                   name="ativo"
                   color="primary"
-                  disabled={!id} // Desabilita durante cadastro (quando não há id)
+                  disabled={!id}
                 />
               }
               label="Ativo"
@@ -214,7 +204,7 @@ const FuncaoFuncionarioFormMUI = () => {
           </Box>
         </Box>
 
-        {/* Linha 1: Código, Nome, Descrição */}
+        {/* Linha 1*/}
         <Grid container spacing={2} alignItems="center" sx={{ mb: 4 }}>
           <Grid item sx={{ width: '6%', minWidth: 80 }}>
             <TextField
@@ -298,7 +288,7 @@ const FuncaoFuncionarioFormMUI = () => {
           </Grid>
         </Grid>
 
-        {/* Linha 3: Observação */}
+        {/* Linha 3*/}
           <Grid item sx={{ width: '100%' }}>
             <TextField
               fullWidth
@@ -313,7 +303,7 @@ const FuncaoFuncionarioFormMUI = () => {
               variant="outlined"
             />
           </Grid>
-        {/* Mensagem de erro */}
+        {/* erro */}
         {errorMessage && (
           <Alert 
             severity="error" 
@@ -325,7 +315,6 @@ const FuncaoFuncionarioFormMUI = () => {
           </Alert>
         )}
 
-        {/* Botões e Informações de registro */}
         <Box
           sx={{
             display: 'flex',
@@ -343,7 +332,7 @@ const FuncaoFuncionarioFormMUI = () => {
             boxShadow: '0px -4px 8px rgba(0, 0, 0, 0.05)'
           }}
         >
-          {/* Informações de registro - lado esquerdo */}
+          {/* registro */}
           <Stack spacing={0.5} sx={{ flex: 1 }}>
             {funcaoFuncionario.dataCadastro && (
               <Typography variant="caption" color="text.secondary">
@@ -357,7 +346,7 @@ const FuncaoFuncionarioFormMUI = () => {
             )}
           </Stack>
 
-          {/* Botões - lado direito */}
+          {/* Botões */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
               variant="contained"

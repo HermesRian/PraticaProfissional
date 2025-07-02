@@ -22,7 +22,6 @@ public class PaisDAO {
             statement.setString(3, pais.getSigla());
             statement.executeUpdate();
 
-            // Recupera o ID gerado automaticamente
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     pais.setId(generatedKeys.getLong(1));
@@ -96,14 +95,13 @@ public class PaisDAO {
             statement.setLong(4, id);
             statement.executeUpdate();
 
-            // Retorna o objeto atualizado
             return buscarPorId(id);
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return null; // Retorna null em caso de erro
+        return null;
     }
 
     public void excluir(Long id) {

@@ -49,11 +49,9 @@ public class ItemNotaFiscalDAO {
                 item.setValorUnitario(resultSet.getBigDecimal("valor_unitario"));
                 item.setValorTotal(resultSet.getBigDecimal("valor_total"));
 
-                // Carregar Produto
                 ProdutoDAO produtoDAO = new ProdutoDAO();
                 item.setProduto(produtoDAO.buscarPorId(resultSet.getLong("produto_id")));
 
-                // Carregar NotaFiscal
                 NotaFiscalDAO notaFiscalDAO = new NotaFiscalDAO();
                 item.setNotaFiscal(notaFiscalDAO.buscarPorId(resultSet.getLong("nota_fiscal_id")));
 
@@ -86,11 +84,9 @@ public class ItemNotaFiscalDAO {
                 item.setValorUnitario(resultSet.getBigDecimal("valor_unitario"));
                 item.setValorTotal(resultSet.getBigDecimal("valor_total"));
 
-                // Carregar Produto
                 ProdutoDAO produtoDAO = new ProdutoDAO();
                 item.setProduto(produtoDAO.buscarPorId(resultSet.getLong("produto_id")));
 
-                // Carregar NotaFiscal
                 NotaFiscalDAO notaFiscalDAO = new NotaFiscalDAO();
                 item.setNotaFiscal(notaFiscalDAO.buscarPorId(resultSet.getLong("nota_fiscal_id")));
             }

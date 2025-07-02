@@ -5,7 +5,6 @@
   import { DashboardLayout } from '@toolpad/core/DashboardLayout';
   import { useNavigate, useLocation } from 'react-router-dom';
 
-  // Importação de ícones do MUI
   import {
     People as PeopleIcon,
     Business as BusinessIcon,
@@ -24,7 +23,6 @@
     Badge as BadgeIcon,
   } from '@mui/icons-material';
 
-  // Configuração da navegação com ícones específicos
   const NAVIGATION = [
     {
       segment: 'dashboard',
@@ -102,13 +100,11 @@
     },
   ];
 
-  // Configuração de branding
   const BRANDING = {
     title: 'Sistema Cantina',
     homeUrl: '/',
   };
 
-  // Router personalizado para integrar com React Router
   function useRouterNavigation() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -124,7 +120,6 @@
     return router;
   }
 
-  // Componente principal do layout
   function DashboardLayoutToolpad({ children }) {
     const router = useRouterNavigation();
 

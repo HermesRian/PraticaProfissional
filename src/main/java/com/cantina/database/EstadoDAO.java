@@ -22,7 +22,7 @@ public class EstadoDAO {
 
             ResultSet generatedKeys = statement.getGeneratedKeys();
             if (generatedKeys.next()) {
-                estado.setId(generatedKeys.getLong(1)); // Captura o ID gerado
+                estado.setId(generatedKeys.getLong(1));
             }
         } catch (SQLException e) {
             e.printStackTrace();

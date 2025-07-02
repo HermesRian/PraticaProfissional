@@ -120,7 +120,6 @@ public class ParcelaCondicaoPagamentoDAO {
         condicaoPagamento.setId(resultSet.getLong("condicao_pagamento_id"));
         parcela.setCondicaoPagamento(condicaoPagamento);
 
-        // Buscar os dados completos da FormaPagamento
         FormaPagamento formaPagamento = buscarFormaPagamentoPorId(resultSet.getLong("forma_pagamento_id"));
         parcela.setFormaPagamento(formaPagamento);
 

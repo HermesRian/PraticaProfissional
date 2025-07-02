@@ -48,7 +48,6 @@ public class NotaFiscalDAO {
                 notaFiscal.setId(resultSet.getLong("id"));
                 notaFiscal.setDataEmissao(resultSet.getTimestamp("data_emissao"));
                 notaFiscal.setValorTotal(resultSet.getBigDecimal("valor_total"));
-                // Relacionamentos devem ser carregados conforme necessário
                 notaFiscal.setNumero(resultSet.getString("numero"));
                 notaFiscal.setSerie(resultSet.getString("serie"));
                 notaFiscal.setChaveAcesso(resultSet.getString("chave_acesso"));
@@ -78,7 +77,6 @@ public class NotaFiscalDAO {
                 notaFiscal.setId(resultSet.getLong("id"));
                 notaFiscal.setDataEmissao(resultSet.getTimestamp("data_emissao"));
                 notaFiscal.setValorTotal(resultSet.getBigDecimal("valor_total"));
-                // Relacionamentos devem ser carregados conforme necessário
                 notaFiscal.setNumero(resultSet.getString("numero"));
                 notaFiscal.setSerie(resultSet.getString("serie"));
                 notaFiscal.setChaveAcesso(resultSet.getString("chave_acesso"));
