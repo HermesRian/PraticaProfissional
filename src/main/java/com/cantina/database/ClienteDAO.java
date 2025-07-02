@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 public class ClienteDAO {
 
     public void salvar(Cliente cliente) {
-        // Validação de CPF/CNPJ considerando nacionalidade
         if (cliente.getTipo() != null) {
             boolean isBrasileiro = isClienteBrasileiro(cliente.getCidadeId());
             boolean documentoValido = DocumentValidationUtil.validarCpfCnpjComNacionalidade(
@@ -192,7 +191,6 @@ public class ClienteDAO {
     }
 
     public void atualizar(Cliente cliente) {
-        // Validação de CPF/CNPJ considerando nacionalidade
         if (cliente.getTipo() != null) {
             boolean isBrasileiro = isClienteBrasileiro(cliente.getCidadeId());
             boolean documentoValido = DocumentValidationUtil.validarCpfCnpjComNacionalidade(

@@ -95,7 +95,6 @@ public class ClienteServiceImpl implements ClienteService {
                                     throw new IllegalArgumentException("CNPJ/CPF é obrigatório para clientes brasileiros.");
                                 }
                             }
-                            // Validação de CPF/CNPJ
                             if (cliente.getTipo() != null && cliente.getCnpjCpf() != null) {
                                 if (cliente.getTipo() == 0 && !DocumentoUtils.isCpfValido(cliente.getCnpjCpf())) {
                                     throw new IllegalArgumentException("CPF inválido.");

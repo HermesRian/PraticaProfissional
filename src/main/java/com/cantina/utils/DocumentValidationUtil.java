@@ -1,16 +1,7 @@
 package com.cantina.utils;
 
-/**
- * Classe utilitária para validação de documentos no backend
- * Implementa as mesmas validações do frontend para garantir consistência
- */
 public class DocumentValidationUtil {
 
-    /**
-     * Valida um CPF
-     * @param cpf - CPF com ou sem formatação
-     * @return true se o CPF for válido, false caso contrário
-     */
     public static boolean validarCPF(String cpf) {
         if (cpf == null) return false;
 
@@ -47,31 +38,21 @@ public class DocumentValidationUtil {
         return true;
     }
 
-    /**
-     * Valida um CNPJ
-     * @param cnpj - CNPJ com ou sem formatação
-     * @return true se o CNPJ for válido, false caso contrário
-     */
     public static boolean validarCNPJ(String cnpj) {
         if (cnpj == null) return false;
 
-        // Remove caracteres não numéricos
         String cnpjLimpo = cnpj.replaceAll("\\D", "");
 
-        // Verifica se tem 14 dígitos
         if (cnpjLimpo.length() != 14) return false;
 
-        // Verifica se todos os dígitos são iguais
         if (cnpjLimpo.matches("(\\d)\\1{13}")) return false;
 
-        // Validação dos dígitos verificadores
         int tamanho = cnpjLimpo.length() - 2;
         String numeros = cnpjLimpo.substring(0, tamanho);
         String digitos = cnpjLimpo.substring(tamanho);
         int soma = 0;
         int pos = tamanho - 7;
 
-        // Primeiro dígito verificador
         for (int i = tamanho; i >= 1; i--) {
             soma += (numeros.charAt(tamanho - i) - '0') * pos--;
             if (pos < 2) pos = 9;
@@ -80,7 +61,6 @@ public class DocumentValidationUtil {
         int resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
         if (resultado != (digitos.charAt(0) - '0')) return false;
 
-        // Segundo dígito verificador
         tamanho = tamanho + 1;
         numeros = cnpjLimpo.substring(0, tamanho);
         soma = 0;
@@ -97,12 +77,7 @@ public class DocumentValidationUtil {
         return true;
     }
 
-    /**
-     * Valida CPF ou CNPJ dependendo do tipo
-     * @param documento - CPF ou CNPJ com ou sem formatação
-     * @param tipo - 0 para CPF (PESSOA FÍSICA) ou 1 para CNPJ (PESSOA JURÍDICA)
-     * @return true se o documento for válido, false caso contrário
-     */
+
     public static boolean validarCpfCnpj(String documento, Integer tipo) {
         if (documento == null || tipo == null) return false;
 
@@ -115,25 +90,15 @@ public class DocumentValidationUtil {
         return false;
     }
 
-    /**
-     * Valida CPF ou CNPJ dependendo do tipo, permitindo nulo para estrangeiros
-     * @param documento - CPF ou CNPJ com ou sem formatação
-     * @param tipo - 0 para CPF (PESSOA FÍSICA) ou 1 para CNPJ (PESSOA JURÍDICA)
-     * @param isBrasileiro - true se o cliente for brasileiro, false se estrangeiro
-     * @return true se o documento for válido ou se for estrangeiro com documento nulo
-     */
     public static boolean validarCpfCnpjComNacionalidade(String documento, Integer tipo, boolean isBrasileiro) {
-        // Se for estrangeiro e documento for nulo, é válido
         if (!isBrasileiro && documento == null) {
             return true;
         }
 
-        // Se for brasileiro, aplica a validação normal
         if (isBrasileiro) {
             return validarCpfCnpj(documento, tipo);
         }
 
-        // Se for estrangeiro mas tem documento, valida o documento
         if (!isBrasileiro && documento != null && tipo != null) {
             return validarCpfCnpj(documento, tipo);
         }
@@ -141,33 +106,20 @@ public class DocumentValidationUtil {
         return false;
     }
 
-    /**
-     * Valida formato do CEP (apenas verifica se tem 8 dígitos)
-     * @param cep - CEP com ou sem formatação
-     * @return true se o formato do CEP for válido, false caso contrário
-     */
     public static boolean validarCEP(String cep) {
         if (cep == null) return false;
 
-        // Remove caracteres não numéricos
         String cepLimpo = cep.replaceAll("\\D", "");
 
-        // Verifica se tem 8 dígitos
         return cepLimpo.length() == 8;
     }
 
-    /**
-     * Valida formato do telefone (8 a 11 dígitos)
-     * @param telefone - Telefone com ou sem formatação
-     * @return true se o formato do telefone for válido, false caso contrário
-     */
+
     public static boolean validarTelefone(String telefone) {
         if (telefone == null) return false;
 
-        // Remove caracteres não numéricos
         String telefoneLimpo = telefone.replaceAll("\\D", "");
 
-        // Verifica se tem entre 8 e 11 dígitos
         return telefoneLimpo.length() >= 8 && telefoneLimpo.length() <= 11;
     }
 }
