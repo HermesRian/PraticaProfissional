@@ -338,21 +338,37 @@ const ClienteForm = () => {
     
     if (!cliente.email?.trim()) {
       errors.email = 'Este campo é obrigatório';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cliente.email)) {
+      errors.email = 'Email inválido';
     }
-    
     
     if (!cliente.cidadeId) {
       errors.cidade = 'Selecione uma cidade';
     }
     
-    
-    if (!cliente.cidadeId) {
+    // Se há erros, exibe e para a execução
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
     
+    // Validação do telefone (deve ter 10 ou 11 dígitos)
     const telefoneSemMascara = cliente.telefone?.replace(/\D/g, '') || '';
     if (telefoneSemMascara.length !== 0 && (telefoneSemMascara.length < 10 || telefoneSemMascara.length > 11)) {
-      setErrorMessage('O telefone deve ter 10 ou 11 dígitos.');
+      setFieldErrors(prev => ({
+        ...prev,
+        telefone: 'O telefone deve ter 10 ou 11 dígitos.'
+      }));
+      return;
+    }
+    
+    // Validação do CEP (deve ter 8 dígitos)
+    const cepSemMascara = cliente.cep?.replace(/\D/g, '') || '';
+    if (cepSemMascara.length !== 0 && cepSemMascara.length !== 8) {
+      setFieldErrors(prev => ({
+        ...prev,
+        cep: 'O CEP deve ter exatamente 8 dígitos.'
+      }));
       return;
     }
     const cpfCnpjSemMascara = cliente.cnpjCpf?.replace(/\D/g, '') || '';
@@ -394,13 +410,17 @@ const ClienteForm = () => {
         return;
       }
     }
-    
-    // Validação do CEP
-    const cepSemMascara = cliente.cep?.replace(/\D/g, '') || '';
-    if (cepSemMascara.length !== 0 && cepSemMascara.length !== 8) {
-      //setErrorMessage('O CEP deve ter exatamente 8 dígitos.');
+
+    // Validação do limite de crédito
+    if (cliente.limiteCredito && parseFloat(cliente.limiteCredito) > 15000) {
+      setFieldErrors(prev => ({
+        ...prev,
+        limiteCredito: 'O limite de crédito não pode ser superior a R$ 15.000,00'
+      }));
       return;
-    }    // Formatando os dados para corresponder ao modelo esperado pelo backend
+    }
+
+    // Formatando os dados para corresponder ao modelo esperado pelo backend
     const clienteFormatado = {
       ...cliente,
       // Convertendo valores numéricos
@@ -741,8 +761,8 @@ const ClienteForm = () => {
               value={getDisplayValue('cep', cliente.cep)}
               onChange={e => handleNumericChange(e, 8)}
               variant="outlined"
-              error={!!fieldErrors.cep || (cliente.cep && cliente.cep.length !== 8)}
-              helperText={fieldErrors.cep || (cliente.cep && cliente.cep.length !== 8 ? 'CEP inválido' : '')}
+              error={!!fieldErrors.cep}
+              helperText={fieldErrors.cep || ''}
               inputProps={{ inputMode: 'numeric' }}
               autoComplete="off"
             />
@@ -795,8 +815,8 @@ const ClienteForm = () => {
               value={getDisplayValue('telefone', cliente.telefone)}
               onChange={e => handleNumericChange(e, 11)}
               variant="outlined"
-              error={!!fieldErrors.telefone || (cliente.telefone && (cliente.telefone.length < 10 || cliente.telefone.length > 11))}
-              helperText={fieldErrors.telefone || (cliente.telefone && (cliente.telefone.length < 10 || cliente.telefone.length > 11) ? 'Telefone inválido (10 ou 11 dígitos)' : '')}
+              error={!!fieldErrors.telefone}
+              helperText={fieldErrors.telefone || ''}
               inputProps={{ inputMode: 'numeric' }}
               autoComplete="off"
             />
@@ -830,7 +850,6 @@ const ClienteForm = () => {
                   <MenuItem value="">Selecione...</MenuItem>
                   <MenuItem value="M">Masculino</MenuItem>
                   <MenuItem value="F">Feminino</MenuItem>
-                  <MenuItem value="O">Outro</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -865,15 +884,7 @@ const ClienteForm = () => {
                 handleNumericChange(e, maxLength);
               }}
               variant="outlined"
-              error={!!fieldErrors.cnpjCpf || (() => {
-                const validacao = validarCpfCnpjEmTempoReal(cliente.cnpjCpf, cliente.tipo);
-                return !validacao.isValid;
-              })()}
-              helperText={fieldErrors.cnpjCpf || (() => {
-                const isCidadeBrasileira = cliente.cidadeEstadoPais?.toLowerCase().includes('brasil') === true;
-                const validacao = validarCpfCnpjEmTempoReal(cliente.cnpjCpf, cliente.tipo);
-                return validacao.message;
-              })()}
+              error={!!fieldErrors.cnpjCpf}
               inputProps={{ inputMode: 'numeric' }}
               autoComplete="off"
             />
@@ -909,9 +920,11 @@ const ClienteForm = () => {
               }}
               inputProps={{
                 step: "0.01",
-                min: "0"
+                min: "0",
+                max: "15000"
               }}
               variant="outlined"
+              error={!!fieldErrors.limiteCredito}
             />
           </Grid>
 

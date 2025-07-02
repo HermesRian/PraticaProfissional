@@ -377,6 +377,8 @@ const FornecedorForm = () => {
     
     if (!fornecedor.email?.trim()) {
       errors.email = 'Este campo é obrigatório';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fornecedor.email)) {
+      errors.email = 'Email inválido';
     }
     
     // CPF/CNPJ não é validado como obrigatório aqui pois depende se é fornecedor brasileiro ou estrangeiro
@@ -452,6 +454,15 @@ const FornecedorForm = () => {
     const cepSemMascara = fornecedor.cep?.replace(/\D/g, '') || '';
     if (cepSemMascara.length !== 0 && cepSemMascara.length !== 8) {
       //setErrorMessage('O CEP deve ter exatamente 8 dígitos.');
+      return;
+    }
+
+    // Validação do limite de crédito
+    if (fornecedor.limiteCredito && parseFloat(fornecedor.limiteCredito) > 15000) {
+      setFieldErrors(prev => ({
+        ...prev,
+        limiteCredito: 'O limite de crédito não pode ser superior a R$ 15.000,00'
+      }));
       return;
     }
 
@@ -991,9 +1002,12 @@ const FornecedorForm = () => {
               }}
               inputProps={{
                 step: "0.01",
-                min: "0"
+                min: "0",
+                max: "15000"
               }}
               variant="outlined"
+              error={fornecedor.limiteCredito && parseFloat(fornecedor.limiteCredito) > 15000}
+              helperText={fornecedor.limiteCredito && parseFloat(fornecedor.limiteCredito) > 15000 ? 'Limite máximo: R$ 15.000,00' : 'Máximo: R$ 15.000,00'}
             />
           </Grid>
 
