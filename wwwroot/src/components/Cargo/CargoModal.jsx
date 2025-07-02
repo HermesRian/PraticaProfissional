@@ -142,7 +142,7 @@ const CargoModal = ({ onClose, onCargoSelecionado }) => {
               }
             }}
           />
-          <Button
+          {/* <Button
             onClick={handleOpenCadastroModal}
             variant="contained"
             startIcon={<AddIcon />}
@@ -157,7 +157,7 @@ const CargoModal = ({ onClose, onCargoSelecionado }) => {
             }}
           >
             Adicionar
-          </Button>
+          </Button> */}
         </Box>
 
         {/* Tabela de cargos */}

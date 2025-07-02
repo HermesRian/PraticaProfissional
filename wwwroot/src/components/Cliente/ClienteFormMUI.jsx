@@ -748,7 +748,7 @@ const ClienteForm = () => {
               <TextField
                 id="cidade-input"
                 value={cliente.cidadeNome || ''}
-                label="Cidade"
+                label="Cidade *"
                 disabled
                 fullWidth
                 size="small"
@@ -854,7 +854,7 @@ const ClienteForm = () => {
             />
           </Grid>
         </Grid>        
-        
+
         {/* Linha 4*/}
         <Grid container spacing={2} sx={{ mb: 4 }}>          <Grid item sx={{ width: cliente.tipo === 'FISICA' ? '15%' : '20%', minWidth: 150 }}>
             <TextField

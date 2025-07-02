@@ -94,7 +94,6 @@ public class CondicaoPagamentoDAO {
                 condicao.setMultaPercentual(resultSet.getDouble("multa_percentual"));
                 condicao.setDescontoPercentual(resultSet.getDouble("desconto_percentual"));
 
-                // Carregar as parcelas associadas
                 ParcelaCondicaoPagamentoDAO parcelaDAO = new ParcelaCondicaoPagamentoDAO();
                 condicao.setParcelasCondicao(parcelaDAO.buscarPorCondicaoPagamentoId(condicao.getId()));
             }
@@ -112,13 +111,12 @@ public class CondicaoPagamentoDAO {
         String sqlInserirParcela = "INSERT INTO parcela_condicao_pagamento (numero_parcela, dias, percentual, condicao_pagamento_id, forma_pagamento_id) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection()) {
-            connection.setAutoCommit(false); // Inicia uma transação
+            connection.setAutoCommit(false);
 
             try (PreparedStatement statementCondicao = connection.prepareStatement(sqlCondicao);
                  PreparedStatement statementExcluirParcelas = connection.prepareStatement(sqlExcluirParcelas);
                  PreparedStatement statementInserirParcela = connection.prepareStatement(sqlInserirParcela)) {
 
-                // Atualiza os campos da condição de pagamento
                 statementCondicao.setString(1, condicaoPagamento.getDescricao());
                 statementCondicao.setInt(2, condicaoPagamento.getDias());
                 statementCondicao.setInt(3, condicaoPagamento.getParcelas());
@@ -129,11 +127,9 @@ public class CondicaoPagamentoDAO {
                 statementCondicao.setLong(8, condicaoPagamento.getId());
                 statementCondicao.executeUpdate();
 
-                // Exclui as parcelas antigas
                 statementExcluirParcelas.setLong(1, condicaoPagamento.getId());
                 statementExcluirParcelas.executeUpdate();
 
-                // Insere as parcelas atualizadas
                 for (ParcelaCondicaoPagamento parcela : condicaoPagamento.getParcelasCondicao()) {
                     statementInserirParcela.setInt(1, parcela.getNumeroParcela());
                     statementInserirParcela.setInt(2, parcela.getDias());
@@ -143,9 +139,9 @@ public class CondicaoPagamentoDAO {
                     statementInserirParcela.executeUpdate();
                 }
 
-                connection.commit(); // Confirma a transação
+                connection.commit();
             } catch (SQLException e) {
-                connection.rollback(); // Reverte a transação em caso de erro
+                connection.rollback();
                 throw e;
             }
         } catch (SQLException e) {

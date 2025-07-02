@@ -5,20 +5,19 @@ public class DocumentValidationUtil {
     public static boolean validarCPF(String cpf) {
         if (cpf == null) return false;
 
-        // Remove caracteres não numéricos
         String cpfLimpo = cpf.replaceAll("\\D", "");
 
-        // Verifica se tem 11 dígitos
+        // verifica se tem 11 dígitos
         if (cpfLimpo.length() != 11) return false;
 
-        // Verifica se todos os dígitos são iguais
+        // verifica se todos os dígitos são iguais
         if (cpfLimpo.matches("(\\d)\\1{10}")) return false;
 
-        // Validação dos dígitos verificadores
+        // validação dos dígitos verificadores
         int soma = 0;
         int resto;
 
-        // Primeiro dígito verificador
+        // primeiro dígito verificador
         for (int i = 1; i <= 9; i++) {
             soma += Integer.parseInt(cpfLimpo.substring(i - 1, i)) * (11 - i);
         }
@@ -26,7 +25,7 @@ public class DocumentValidationUtil {
         if (resto == 10 || resto == 11) resto = 0;
         if (resto != Integer.parseInt(cpfLimpo.substring(9, 10))) return false;
 
-        // Segundo dígito verificador
+        //segundo dígito verificador
         soma = 0;
         for (int i = 1; i <= 10; i++) {
             soma += Integer.parseInt(cpfLimpo.substring(i - 1, i)) * (12 - i);

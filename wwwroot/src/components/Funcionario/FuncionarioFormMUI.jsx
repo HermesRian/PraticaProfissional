@@ -692,7 +692,6 @@ const FuncionarioFormMUI = () => {
               >
                 <MenuItem value={0}>Masculino</MenuItem>
                 <MenuItem value={1}>Feminino</MenuItem>
-                <MenuItem value={2}>Outro</MenuItem>
               </Select>
             </FormControl>
           </Grid>

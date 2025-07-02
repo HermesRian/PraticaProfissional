@@ -11,7 +11,9 @@ import {
   Box,
   Typography,
   IconButton,
-  Alert
+  Alert,
+  Grid,
+  Paper
 } from '@mui/material';
 import {
   Close as CloseIcon
@@ -26,17 +28,12 @@ const CargoFormModal = ({ onClose }) => {
     ativo: true
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setCargo({
-      ...cargo,
-      [name]: type === 'checkbox' ? checked : value
-    });
-
-    // Limpar erro do campo quando o usuário começar a digitar
+    
     if (fieldErrors[name]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -44,18 +41,22 @@ const CargoFormModal = ({ onClose }) => {
         return newErrors;
       });
     }
+    
+    setCargo({
+      ...cargo,
+      [name]: type === 'checkbox' ? checked : value
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setErrorMessage('');
     setFieldErrors({});
 
-    // Validação
     const errors = {};
     if (!cargo.nome.trim()) {
-      errors.nome = 'Nome é obrigatório';
+      errors.nome = 'Este campo é obrigatório';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -79,14 +80,14 @@ const CargoFormModal = ({ onClose }) => {
       });
 
       if (response.ok) {
-        onClose(); // Fechar modal e recarregar lista
+        onClose();
       } else {
         const errorText = await response.text();
-        setError(`Erro ao salvar cargo: ${errorText}`);
+        setErrorMessage(`Erro ao salvar cargo: ${errorText}`);
       }
     } catch (error) {
       console.error('Erro ao salvar cargo:', error);
-      setError('Erro ao salvar cargo. Tente novamente.');
+      setErrorMessage('Erro ao salvar cargo. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -110,104 +111,133 @@ const CargoFormModal = ({ onClose }) => {
         pb: 2
       }}>
         <Typography variant="h6" fontWeight={600}>
-          Adicionar Novo Cargo
+          Cadastrar Novo Cargo
         </Typography>
         <IconButton onClick={onClose} size="small">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
-      <form onSubmit={handleSubmit}>
-        <DialogContent sx={{ p: 3 }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
+      <DialogContent sx={{ p: 4 }}>
+        <Paper 
+          component="form"
+          onSubmit={handleSubmit}
+          elevation={0}
+          sx={{ 
+            p: 0,
+            bgcolor: 'transparent'
+          }}
+        >
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={8}>
+              <TextField
+                fullWidth
+                required
+                size="small"
+                label="Nome do Cargo"
+                name="nome"
+                value={cargo.nome}
+                onChange={handleChange}
+                error={!!fieldErrors.nome}
+                helperText={fieldErrors.nome || ''}
+                variant="outlined"
+                placeholder="Digite o nome do cargo"
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Carga Horária (horas)"
+                name="cargaHoraria"
+                type="number"
+                value={cargo.cargaHoraria}
+                onChange={handleChange}
+                variant="outlined"
+                placeholder="0"
+                inputProps={{
+                  step: "0.5",
+                  min: "0"
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Descrição"
+                name="descricao"
+                value={cargo.descricao}
+                onChange={handleChange}
+                multiline
+                rows={2}
+                variant="outlined"
+                placeholder="Digite a descrição do cargo"
+              />
+            </Grid>
+
+            <Grid item xs={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={cargo.requerCnh}
+                    onChange={handleChange}
+                    name="requerCnh"
+                    color="primary"
+                  />
+                }
+                label="Requer CNH"
+              />
+            </Grid>
+
+            <Grid item xs={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={cargo.ativo}
+                    onChange={handleChange}
+                    name="ativo"
+                    color="primary"
+                  />
+                }
+                label="Ativo"
+              />
+            </Grid>
+          </Grid>
+
+          {errorMessage && (
+            <Alert 
+              severity="error" 
+              variant="filled"
+              onClose={() => setErrorMessage('')}
+              sx={{ mt: 3 }}
+            >
+              {errorMessage}
             </Alert>
           )}
+        </Paper>
+      </DialogContent>
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              fullWidth
-              required
-              label="Nome do Cargo"
-              name="nome"
-              value={cargo.nome}
-              onChange={handleChange}
-              error={!!fieldErrors.nome}
-              helperText={fieldErrors.nome}
-              variant="outlined"
-            />
-
-            <TextField
-              fullWidth
-              label="Descrição"
-              name="descricao"
-              value={cargo.descricao}
-              onChange={handleChange}
-              multiline
-              rows={3}
-              variant="outlined"
-            />
-
-            <TextField
-              fullWidth
-              label="Carga Horária (horas)"
-              name="cargaHoraria"
-              type="number"
-              value={cargo.cargaHoraria}
-              onChange={handleChange}
-              variant="outlined"
-              inputProps={{
-                step: "0.5",
-                min: "0"
-              }}
-            />
-
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={cargo.requerCnh}
-                  onChange={handleChange}
-                  name="requerCnh"
-                  color="primary"
-                />
-              }
-              label="Requer CNH"
-            />
-
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={cargo.ativo}
-                  onChange={handleChange}
-                  name="ativo"
-                  color="primary"
-                />
-              }
-              label="Ativo"
-            />
-          </Box>
-        </DialogContent>
-
-        <DialogActions sx={{ p: 3, bgcolor: '#ffffff' }}>
-          <Button
-            onClick={onClose}
-            variant="outlined"
-            color="inherit"
-            disabled={loading}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={loading}
-          >
-            {loading ? 'Salvando...' : 'Salvar'}
-          </Button>
-        </DialogActions>
-      </form>
+      <DialogActions sx={{ p: 3, bgcolor: '#ffffff' }}>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          color="primary"
+          disabled={loading}
+        >
+          {loading ? 'Salvando...' : 'Salvar'}
+        </Button>
+        <Button
+          onClick={onClose}
+          variant="outlined"
+          color="inherit"
+          disabled={loading}
+        >
+          Cancelar
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };
