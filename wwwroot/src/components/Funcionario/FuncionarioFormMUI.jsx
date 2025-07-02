@@ -306,7 +306,6 @@ const FuncionarioFormMUI = () => {
   };
 
   const handleCidadeSelecionada = (cidade) => {
-    // Limpa o erro da cidade quando uma cidade for selecionada
     if (fieldErrors.cidade) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -324,7 +323,6 @@ const FuncionarioFormMUI = () => {
   };
 
   const handleCargoSelecionado = (cargo) => {
-    // Limpa o erro do cargo quando um cargo for selecionado
     if (fieldErrors.cargo) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
