@@ -13,9 +13,11 @@ import java.math.BigDecimal;
 public class ClienteDAO {
 
     public void salvar(Cliente cliente) {
-        // Validação de CPF/CNPJ antes de salvar
+        // Validação de CPF/CNPJ considerando nacionalidade
         if (cliente.getTipo() != null) {
-            boolean documentoValido = DocumentValidationUtil.validarCpfCnpj(cliente.getCnpjCpf(), cliente.getTipo());
+            boolean isBrasileiro = isClienteBrasileiro(cliente.getCidadeId());
+            boolean documentoValido = DocumentValidationUtil.validarCpfCnpjComNacionalidade(
+                cliente.getCnpjCpf(), cliente.getTipo(), isBrasileiro);
             if (!documentoValido) {
                 String tipoDocumento = cliente.getTipo() == 0 ? "CPF" : "CNPJ";
                 throw new InvalidDocumentException(tipoDocumento + " inválido");
@@ -44,7 +46,7 @@ public class ClienteDAO {
             if (cliente.getAtivo() != null) {
                 statement.setBoolean(11, cliente.getAtivo());
             } else {
-                statement.setBoolean(11, false); // Ou use setNull se preferir que seja NULL no banco
+                statement.setBoolean(11, false);
             }
 
             statement.setString(12, cliente.getApelido());
@@ -93,6 +95,31 @@ public class ClienteDAO {
         }
     }
 
+    private boolean isClienteBrasileiro(Long cidadeId) {
+        if (cidadeId == null) return false;
+
+        String sql = "SELECT p.nome FROM cidade c " +
+                     "JOIN estado e ON c.estado_id = e.id " +
+                     "JOIN pais p ON e.pais_id = p.id " +
+                     "WHERE c.id = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setLong(1, cidadeId);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                String nomePais = resultSet.getString("nome");
+                return "BRASIL".equalsIgnoreCase(nomePais);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
     private Cliente mapearClienteDoResultSet(ResultSet resultSet) throws SQLException {
         Cliente cliente = new Cliente();
         cliente.setId(resultSet.getLong("id"));
@@ -107,22 +134,17 @@ public class ClienteDAO {
         cliente.setTelefone(resultSet.getString("telefone"));
         cliente.setEmail(resultSet.getString("email"));
         cliente.setAtivo(resultSet.getBoolean("ativo"));
-
         cliente.setApelido(resultSet.getString("apelido"));
         cliente.setLimiteCredito(resultSet.getBigDecimal("limite_credito"));
         cliente.setNacionalidade(resultSet.getString("nacionalidade"));
         cliente.setRgInscricaoEstadual(resultSet.getString("rg_inscricao_estadual"));
         cliente.setDataNascimento(resultSet.getDate("data_nascimento"));
         cliente.setEstadoCivil(resultSet.getString("estado_civil"));
-
         cliente.setTipo(resultSet.getInt("tipo"));
         if (resultSet.wasNull()) cliente.setTipo(null);
-
         cliente.setSexo(resultSet.getString("sexo"));
-
         cliente.setCondicaoPagamentoId(resultSet.getLong("condicao_pagamento_id"));
         if (resultSet.wasNull()) cliente.setCondicaoPagamentoId(null);
-
         cliente.setLimiteCredito2(resultSet.getBigDecimal("limite_credito2"));
         cliente.setObservacao(resultSet.getString("observacao"));
         cliente.setDataCadastro(resultSet.getTimestamp("data_cadastro"));
@@ -170,9 +192,11 @@ public class ClienteDAO {
     }
 
     public void atualizar(Cliente cliente) {
-        // Validação de CPF/CNPJ antes de atualizar
+        // Validação de CPF/CNPJ considerando nacionalidade
         if (cliente.getTipo() != null) {
-            boolean documentoValido = DocumentValidationUtil.validarCpfCnpj(cliente.getCnpjCpf(), cliente.getTipo());
+            boolean isBrasileiro = isClienteBrasileiro(cliente.getCidadeId());
+            boolean documentoValido = DocumentValidationUtil.validarCpfCnpjComNacionalidade(
+                cliente.getCnpjCpf(), cliente.getTipo(), isBrasileiro);
             if (!documentoValido) {
                 String tipoDocumento = cliente.getTipo() == 0 ? "CPF" : "CNPJ";
                 throw new InvalidDocumentException(tipoDocumento + " inválido");

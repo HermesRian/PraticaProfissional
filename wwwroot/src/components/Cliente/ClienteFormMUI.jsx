@@ -14,7 +14,6 @@ import {
   formatIE 
 } from '../../utils/documentValidation';
 
-// Importações do Material-UI
 import {
   Box,
   Typography,
@@ -41,7 +40,6 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 
-// Funções auxiliares para conversão de valores
 const converterEstadoCivilParaNumero = (estadoCivil) => {
   switch (estadoCivil) {
     case 'SOLTEIRO': return 0;
@@ -51,7 +49,7 @@ const converterEstadoCivilParaNumero = (estadoCivil) => {
     case 'UNIAO_ESTAVEL': return 4;
     case 'SEPARADO': return 5;
     case 'OUTRO': return 6;
-    default: return null; // Quando não há valor selecionado
+    default: return null;
   }
 };
 
@@ -70,10 +68,8 @@ const converterNumeroParaEstadoCivil = (numero) => {
   }
 };
 
-// As funções de validação de CPF e CNPJ foram movidas para utils/documentValidation.js
-
-// Componente de formulário de cliente
-const ClienteForm = () => {    const [cliente, setCliente] = useState({
+const ClienteForm = () => {
+  const [cliente, setCliente] = useState({
     nome: '',
     cnpjCpf: '',
     endereco: '',
@@ -83,6 +79,8 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
     cep: '',
     cidadeId: '',
     cidadeNome: '',
+    cidadeEstado: '',
+    cidadeEstadoPais: '',
     telefone: '',
     email: '',
     ativo: true,
@@ -92,8 +90,9 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
     nacionalidade: '',
     rgInscricaoEstadual: '',
     dataNascimento: '',
-    estadoCivil: '',    tipo: 'FISICA', // Padrão: pessoa física
-    sexo: '', // Começa vazio para evitar pressuposições
+    estadoCivil: '',
+    tipo: 'FISICA',
+    sexo: '',
     condicaoPagamentoId: '',
     condicaoPagamentoDescricao: '',
     observacao: '',
@@ -102,18 +101,35 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
   });
   const [isCidadeModalOpen, setIsCidadeModalOpen] = useState(false);
   const [isCondicaoPagamentoModalOpen, setIsCondicaoPagamentoModalOpen] = useState(false);
+  const [estados, setEstados] = useState([]);
+  const [paises, setPaises] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [showRequiredErrors, setShowRequiredErrors] = useState(false);
   const navigate = useNavigate();
-  const { id } = useParams();  useEffect(() => {
+  const { id } = useParams();
+
+  // Carregar estados e países
+  useEffect(() => {
+    Promise.all([
+      fetch('http://localhost:8080/estados').then(res => res.json()),
+      fetch('http://localhost:8080/paises').then(res => res.json())
+    ])
+    .then(([estadosData, paisesData]) => {
+      setEstados(estadosData);
+      setPaises(paisesData);
+    })
+    .catch(error => console.error('Erro ao carregar estados e países:', error));
+  }, []);
+
+  useEffect(() => {
     if (id) {
       fetch(`http://localhost:8080/clientes/${id}`)
-        .then((response) => response.json())        .then(async (data) => {
-          console.log('Dados recebidos do backend:', data); // Debug para ver os dados
+        .then((response) => response.json())
+        .then(async (data) => {
+          console.log('Dados recebidos do backend:', data);
           console.log('cidadeId:', data.cidadeId, 'condicaoPagamentoId:', data.condicaoPagamentoId);
           
-          // Convertendo os valores numéricos recebidos do backend para strings
           const tipoFormatado = typeof data.tipo === 'number' 
             ? (data.tipo === 0 ? 'FISICA' : 'JURIDICA') 
             : (data.tipo || 'FISICA');
@@ -122,8 +138,9 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
             ? (data.sexo === 0 ? 'M' : data.sexo === 1 ? 'F' : 'O') 
             : (data.sexo || '');
 
-          // Buscar nome da cidade se cidadeId estiver presente
           let cidadeNome = '';
+          let cidadeEstado = '';
+          let cidadeEstadoPais = '';
           if (data.cidadeId) {
             try {
               console.log('Buscando cidade com ID:', data.cidadeId);
@@ -131,8 +148,29 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               if (cidadeResponse.ok) {
                 const cidadeData = await cidadeResponse.json();
                 cidadeNome = cidadeData.nome || '';
+                
+                // Buscar informações do estado
+                if (cidadeData.estadoId) {
+                  const estadoResponse = await fetch(`http://localhost:8080/estados/${cidadeData.estadoId}`);
+                  if (estadoResponse.ok) {
+                    const estadoData = await estadoResponse.json();
+                    cidadeEstado = estadoData.nome || '';
+                    
+                    // Buscar informações do país
+                    if (estadoData.paisId) {
+                      const paisResponse = await fetch(`http://localhost:8080/paises/${estadoData.paisId}`);
+                      if (paisResponse.ok) {
+                        const paisData = await paisResponse.json();
+                        cidadeEstadoPais = paisData.nome || '';
+                      }
+                    }
+                  }
+                }
+                
                 console.log('Dados da cidade:', cidadeData);
                 console.log('Nome da cidade encontrado:', cidadeNome);
+                console.log('Estado:', cidadeEstado);
+                console.log('País:', cidadeEstadoPais);
               } else {
                 console.error('Erro ao buscar cidade, status:', cidadeResponse.status);
               }
@@ -141,20 +179,11 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
             }
           }
 
-          // Buscar descrição da condição de pagamento se condicaoPagamentoId estiver presente
           let condicaoPagamentoDescricao = '';
           if (data.condicaoPagamentoId) {
             try {
               console.log('Buscando condição de pagamento com ID:', data.condicaoPagamentoId);
-              // Testar ambas as URLs possíveis
-              let condicaoResponse = await fetch(`http://localhost:8080/condicoes-pagamento/${data.condicaoPagamentoId}`);
-              
-              if (!condicaoResponse.ok) {
-                // Tentar URL alternativa se a primeira falhar
-                console.log('Tentando URL alternativa para condição de pagamento...');
-                condicaoResponse = await fetch(`http://localhost:8080/condicao-pagamento/${data.condicaoPagamentoId}`);
-              }
-              
+              let condicaoResponse = await fetch(`http://localhost:8080/condicoes-pagamento/${data.condicaoPagamentoId}`);              
               if (condicaoResponse.ok) {
                 const condicaoData = await condicaoResponse.json();
                 condicaoPagamentoDescricao = condicaoData.descricao || '';
@@ -171,6 +200,8 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
           const clienteAtualizado = {
             ...data,
             cidadeNome: cidadeNome,
+            cidadeEstado: cidadeEstado,
+            cidadeEstadoPais: cidadeEstadoPais,
             condicaoPagamentoDescricao: condicaoPagamentoDescricao,
             tipo: tipoFormatado,
             sexo: sexoFormatado,
@@ -186,7 +217,6 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
   }, [id]);const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     
-    // Limpa o erro do campo quando o usuário começar a digitar
     if (fieldErrors[name]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -194,7 +224,6 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
         return newErrors;
       });
     }
-      // Ações especiais para diferentes campos
     if (name === 'tipo') {
       // Limpa o CPF/CNPJ e RG/Inscrição Estadual quando muda o tipo de pessoa
       setCliente({ 
@@ -244,16 +273,24 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
       case 'cnpjCpf':
         return cliente.tipo === 'FISICA' ? formatCPF(value) : formatCNPJ(value);
       case 'rgInscricaoEstadual':
-        return cliente.tipo === 'FISICA' ? formatRG(value) : formatIE(value);
+        if (cliente.tipo === 'FISICA') {
+          return formatRG(value);
+        } else {
+          // Para IE: se contém apenas números, formata; senão retorna como está (ex: "ISENTO")
+          if (/^\d+$/.test(value)) {
+            return formatIE(value);
+          } else {
+            return value;
+          }
+        }
       default:
         return value;
     }
   };
-  // Função específica para RG (permite X no final)
+  // Função específica para RG/IE (permite texto quando pessoa física para IE poder ser "ISENTO")
   const handleRgChange = (e) => {
     const { name } = e.target;
     let value = e.target.value;
-    const maxLength = cliente.tipo === 'FISICA' ? 9 : 12; // RG: 9 caracteres, IE: 12 caracteres
     
     if (cliente.tipo === 'FISICA') {
       // Para RG: permite números e X apenas no final
@@ -261,13 +298,17 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
       if (value.includes('X') && value.indexOf('X') !== value.length - 1) {
         value = value.replace(/X/g, '');
       }
+      // Limita a 9 caracteres para RG
+      if (value.length > 9) {
+        value = value.substring(0, 9);
+      }
     } else {
-      // Para IE: apenas números
-      value = value.replace(/[^0-9]/g, '');
-    }
-    
-    if (value.length > maxLength) {
-      value = value.substring(0, maxLength);
+      // Para IE: permite texto (para "ISENTO") ou números
+      value = value.toUpperCase();
+      // Limita a 20 caracteres para IE
+      if (value.length > 20) {
+        value = value.substring(0, 20);
+      }
     }
     
     // Limpa o erro do campo quando o usuário começar a digitar
@@ -344,31 +385,44 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
       setErrorMessage('O telefone deve ter 10 ou 11 dígitos.');
       return;
     }
-      // Validação do CPF/CNPJ
+    // Validação do CPF/CNPJ (apenas para cidades brasileiras)
     const cpfCnpjSemMascara = cliente.cnpjCpf?.replace(/\D/g, '') || '';
     const isCpf = cliente.tipo === 'FISICA';
     const tamanhoEsperado = isCpf ? 11 : 14;
     
-    if (cpfCnpjSemMascara.length !== 0) {
-      // Verifica o tamanho primeiro
-      if (cpfCnpjSemMascara.length !== tamanhoEsperado) {
+    // Verifica se a cidade é brasileira (se o país contém "Brasil" no nome)
+    const isCidadeBrasileira = cliente.cidadeEstadoPais?.toLowerCase().includes('brasil') === true;
+    
+    // Só valida CPF/CNPJ se tiver conteúdo OU se for cidade brasileira
+    if (cpfCnpjSemMascara.length !== 0 || isCidadeBrasileira) {
+      if (cpfCnpjSemMascara.length !== 0) {
+        // Verifica o tamanho primeiro
+        if (cpfCnpjSemMascara.length !== tamanhoEsperado) {
+          setFieldErrors(prev => ({
+            ...prev,
+            cnpjCpf: `O ${isCpf ? 'CPF' : 'CNPJ'} deve ter exatamente ${tamanhoEsperado} dígitos.`
+          }));
+          //setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
+          return;
+        }
+        
+        // Valida o CPF ou CNPJ
+        const isDocumentoValido = isCpf ? validarCPF(cpfCnpjSemMascara) : validarCNPJ(cpfCnpjSemMascara);
+        
+        if (!isDocumentoValido) {
+          setFieldErrors(prev => ({
+            ...prev,
+            cnpjCpf: `${isCpf ? 'CPF' : 'CNPJ'} inválido. Verifique os dígitos informados.`
+          }));
+        //  setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
+          return;
+        }
+      } else if (isCidadeBrasileira) {
+        // Se é cidade brasileira mas não tem CPF/CNPJ, mostra aviso
         setFieldErrors(prev => ({
           ...prev,
-          cnpjCpf: `O ${isCpf ? 'CPF' : 'CNPJ'} deve ter exatamente ${tamanhoEsperado} dígitos.`
+          cnpjCpf: `${isCpf ? 'CPF' : 'CNPJ'} é obrigatório para clientes brasileiros.`
         }));
-        //setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
-        return;
-      }
-      
-      // Valida o CPF ou CNPJ
-      const isDocumentoValido = isCpf ? validarCPF(cpfCnpjSemMascara) : validarCNPJ(cpfCnpjSemMascara);
-      
-      if (!isDocumentoValido) {
-        setFieldErrors(prev => ({
-          ...prev,
-          cnpjCpf: `${isCpf ? 'CPF' : 'CNPJ'} inválido. Verifique os dígitos informados.`
-        }));
-      //  setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
         return;
       }
     }
@@ -475,12 +529,16 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
       });
     }
     
+    // Buscar informações do estado e país
+    const estado = estados.find(e => e.id === cidade.estadoId);
+    const pais = estado ? paises.find(p => p.id === parseInt(estado.paisId)) : null;
+    
     setCliente({
       ...cliente,
       cidadeId: cidade.id,
       cidadeNome: cidade.nome,
-      cidadeEstado: cidade.estadoNome,
-      cidadeEstadoPais: cidade.estadoPaisNome,
+      cidadeEstado: estado ? estado.nome : '',
+      cidadeEstadoPais: pais ? pais.nome : '',
     });
     setIsCidadeModalOpen(false);
   };
@@ -844,6 +902,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
                 return !validacao.isValid;
               })()}
               helperText={fieldErrors.cnpjCpf || (() => {
+                const isCidadeBrasileira = cliente.cidadeEstadoPais?.toLowerCase().includes('brasil') === true;
                 const validacao = validarCpfCnpjEmTempoReal(cliente.cnpjCpf, cliente.tipo);
                 return validacao.message;
               })()}
@@ -861,6 +920,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
               value={getDisplayValue('rgInscricaoEstadual', cliente.rgInscricaoEstadual)}
               onChange={handleRgChange}
               variant="outlined"
+              placeholder={cliente.tipo === 'FISICA' ? 'Ex: 123456789' : 'Ex: 123456789012 ou ISENTO'}
               inputProps={{ maxLength: cliente.tipo === 'FISICA' ? 15 : 20 }}
               autoComplete="off"
             />
@@ -1004,7 +1064,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
         </Box>
       </Paper>
 
-      {/* Modal de seleção de cidades */}
+      {/* Modal cidades */}
       {isCidadeModalOpen && (
         <CidadeModal
           onClose={handleCloseCidadeModal}
@@ -1012,7 +1072,7 @@ const ClienteForm = () => {    const [cliente, setCliente] = useState({
         />
       )}
       
-      {/* Modal de seleção de condições de pagamento */}
+      {/* Modal condições de pagamento*/}
       {isCondicaoPagamentoModalOpen && (
         <CondicaoPagamentoModal
           onClose={handleCloseCondicaoPagamentoModal}

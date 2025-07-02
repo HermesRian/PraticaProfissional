@@ -116,6 +116,32 @@ public class DocumentValidationUtil {
     }
 
     /**
+     * Valida CPF ou CNPJ dependendo do tipo, permitindo nulo para estrangeiros
+     * @param documento - CPF ou CNPJ com ou sem formatação
+     * @param tipo - 0 para CPF (PESSOA FÍSICA) ou 1 para CNPJ (PESSOA JURÍDICA)
+     * @param isBrasileiro - true se o cliente for brasileiro, false se estrangeiro
+     * @return true se o documento for válido ou se for estrangeiro com documento nulo
+     */
+    public static boolean validarCpfCnpjComNacionalidade(String documento, Integer tipo, boolean isBrasileiro) {
+        // Se for estrangeiro e documento for nulo, é válido
+        if (!isBrasileiro && documento == null) {
+            return true;
+        }
+
+        // Se for brasileiro, aplica a validação normal
+        if (isBrasileiro) {
+            return validarCpfCnpj(documento, tipo);
+        }
+
+        // Se for estrangeiro mas tem documento, valida o documento
+        if (!isBrasileiro && documento != null && tipo != null) {
+            return validarCpfCnpj(documento, tipo);
+        }
+
+        return false;
+    }
+
+    /**
      * Valida formato do CEP (apenas verifica se tem 8 dígitos)
      * @param cep - CEP com ou sem formatação
      * @return true se o formato do CEP for válido, false caso contrário

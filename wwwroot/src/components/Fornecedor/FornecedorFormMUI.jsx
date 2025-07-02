@@ -82,6 +82,8 @@ const FornecedorForm = () => {
     cep: '',
     cidadeId: '',
     cidadeNome: '',
+    cidadeEstado: '',
+    cidadeEstadoPais: '',
     telefone: '',
     email: '',
     ativo: true,
@@ -102,11 +104,26 @@ const FornecedorForm = () => {
   });
   const [isCidadeModalOpen, setIsCidadeModalOpen] = useState(false);
   const [isCondicaoPagamentoModalOpen, setIsCondicaoPagamentoModalOpen] = useState(false);
+  const [estados, setEstados] = useState([]);
+  const [paises, setPaises] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [showRequiredErrors, setShowRequiredErrors] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams();
+
+  // Carregar estados e países
+  useEffect(() => {
+    Promise.all([
+      fetch('http://localhost:8080/estados').then(res => res.json()),
+      fetch('http://localhost:8080/paises').then(res => res.json())
+    ])
+    .then(([estadosData, paisesData]) => {
+      setEstados(estadosData);
+      setPaises(paisesData);
+    })
+    .catch(error => console.error('Erro ao carregar estados e países:', error));
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -127,6 +144,8 @@ const FornecedorForm = () => {
 
           // Buscar nome da cidade se cidadeId estiver presente
           let cidadeNome = '';
+          let cidadeEstado = '';
+          let cidadeEstadoPais = '';
           if (data.cidadeId) {
             try {
               console.log('Buscando cidade com ID:', data.cidadeId);
@@ -134,8 +153,29 @@ const FornecedorForm = () => {
               if (cidadeResponse.ok) {
                 const cidadeData = await cidadeResponse.json();
                 cidadeNome = cidadeData.nome || '';
+                
+                // Buscar informações do estado
+                if (cidadeData.estadoId) {
+                  const estadoResponse = await fetch(`http://localhost:8080/estados/${cidadeData.estadoId}`);
+                  if (estadoResponse.ok) {
+                    const estadoData = await estadoResponse.json();
+                    cidadeEstado = estadoData.nome || '';
+                    
+                    // Buscar informações do país
+                    if (estadoData.paisId) {
+                      const paisResponse = await fetch(`http://localhost:8080/paises/${estadoData.paisId}`);
+                      if (paisResponse.ok) {
+                        const paisData = await paisResponse.json();
+                        cidadeEstadoPais = paisData.nome || '';
+                      }
+                    }
+                  }
+                }
+                
                 console.log('Dados da cidade:', cidadeData);
                 console.log('Nome da cidade encontrado:', cidadeNome);
+                console.log('Estado:', cidadeEstado);
+                console.log('País:', cidadeEstadoPais);
               } else {
                 console.error('Erro ao buscar cidade, status:', cidadeResponse.status);
               }
@@ -174,6 +214,8 @@ const FornecedorForm = () => {
           const fornecedorAtualizado = {
             ...data,
             cidadeNome: cidadeNome,
+            cidadeEstado: cidadeEstado,
+            cidadeEstadoPais: cidadeEstadoPais,
             condicaoPagamentoDescricao: condicaoPagamentoDescricao,
             tipo: tipoFormatado,
             sexo: sexoFormatado,
@@ -249,17 +291,25 @@ const FornecedorForm = () => {
       case 'cpfCnpj':
         return fornecedor.tipo === 'FISICA' ? formatCPF(value) : formatCNPJ(value);
       case 'rgInscricaoEstadual':
-        return fornecedor.tipo === 'FISICA' ? formatRG(value) : formatIE(value);
+        if (fornecedor.tipo === 'FISICA') {
+          return formatRG(value);
+        } else {
+          // Para IE: se contém apenas números, formata; senão retorna como está (ex: "ISENTO")
+          if (/^\d+$/.test(value)) {
+            return formatIE(value);
+          } else {
+            return value;
+          }
+        }
       default:
         return value;
     }
   };
 
-  // Função específica para RG (permite X no final)
+  // Função específica para RG/IE (permite texto quando pessoa física para IE poder ser "ISENTO")
   const handleRgChange = (e) => {
     const { name } = e.target;
     let value = e.target.value;
-    const maxLength = fornecedor.tipo === 'FISICA' ? 9 : 12; // RG: 9 caracteres, IE: 12 caracteres
     
     if (fornecedor.tipo === 'FISICA') {
       // Para RG: permite números e X apenas no final
@@ -267,13 +317,17 @@ const FornecedorForm = () => {
       if (value.includes('X') && value.indexOf('X') !== value.length - 1) {
         value = value.replace(/X/g, '');
       }
+      // Limita a 9 caracteres para RG
+      if (value.length > 9) {
+        value = value.substring(0, 9);
+      }
     } else {
-      // Para IE: apenas números
-      value = value.replace(/[^0-9]/g, '');
-    }
-    
-    if (value.length > maxLength) {
-      value = value.substring(0, maxLength);
+      // Para IE: permite texto (para "ISENTO") ou números
+      value = value.toUpperCase();
+      // Limita a 20 caracteres para IE
+      if (value.length > 20) {
+        value = value.substring(0, 20);
+      }
     }
     
     // Limpa o erro do campo quando o usuário começar a digitar
@@ -352,31 +406,44 @@ const FornecedorForm = () => {
       setErrorMessage('O telefone deve ter 10 ou 11 dígitos.');
       return;
     }
-      // Validação do CPF/CNPJ
+      // Validação do CPF/CNPJ (apenas para cidades brasileiras)
     const cpfCnpjSemMascara = fornecedor.cpfCnpj?.replace(/\D/g, '') || '';
     const isCpf = fornecedor.tipo === 'FISICA';
     const tamanhoEsperado = isCpf ? 11 : 14;
     
-    if (cpfCnpjSemMascara.length !== 0) {
-      // Verifica o tamanho primeiro
-      if (cpfCnpjSemMascara.length !== tamanhoEsperado) {
+    // Verifica se a cidade é brasileira (se o país contém "Brasil" no nome)
+    const isCidadeBrasileira = fornecedor.cidadeEstadoPais?.toLowerCase().includes('brasil') === true;
+    
+    // Só valida CPF/CNPJ se tiver conteúdo OU se for cidade brasileira
+    if (cpfCnpjSemMascara.length !== 0 || isCidadeBrasileira) {
+      if (cpfCnpjSemMascara.length !== 0) {
+        // Verifica o tamanho primeiro
+        if (cpfCnpjSemMascara.length !== tamanhoEsperado) {
+          setFieldErrors(prev => ({
+            ...prev,
+            cpfCnpj: `O ${isCpf ? 'CPF' : 'CNPJ'} deve ter exatamente ${tamanhoEsperado} dígitos.`
+          }));
+          //setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
+          return;
+        }
+        
+        // Valida o CPF ou CNPJ
+        const isDocumentoValido = isCpf ? validarCPF(cpfCnpjSemMascara) : validarCNPJ(cpfCnpjSemMascara);
+        
+        if (!isDocumentoValido) {
+          setFieldErrors(prev => ({
+            ...prev,
+            cpfCnpj: `${isCpf ? 'CPF' : 'CNPJ'} inválido. Verifique os dígitos informados.`
+          }));
+        //  setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
+          return;
+        }
+      } else if (isCidadeBrasileira) {
+        // Se é cidade brasileira mas não tem CPF/CNPJ, mostra aviso
         setFieldErrors(prev => ({
           ...prev,
-          cpfCnpj: `O ${isCpf ? 'CPF' : 'CNPJ'} deve ter exatamente ${tamanhoEsperado} dígitos.`
+          cpfCnpj: `${isCpf ? 'CPF' : 'CNPJ'} é obrigatório para fornecedores brasileiros.`
         }));
-        //setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
-        return;
-      }
-      
-      // Valida o CPF ou CNPJ
-      const isDocumentoValido = isCpf ? validarCPF(cpfCnpjSemMascara) : validarCNPJ(cpfCnpjSemMascara);
-      
-      if (!isDocumentoValido) {
-        setFieldErrors(prev => ({
-          ...prev,
-          cpfCnpj: `${isCpf ? 'CPF' : 'CNPJ'} inválido. Verifique os dígitos informados.`
-        }));
-      //  setErrorMessage(`Por favor, corrija os erros nos campos indicados.`);
         return;
       }
     }
@@ -488,12 +555,16 @@ const FornecedorForm = () => {
       });
     }
     
+    // Buscar informações do estado e país
+    const estado = estados.find(e => e.id === cidade.estadoId);
+    const pais = estado ? paises.find(p => p.id === parseInt(estado.paisId)) : null;
+    
     setFornecedor({
       ...fornecedor,
       cidadeId: cidade.id,
       cidadeNome: cidade.nome,
-      cidadeEstado: cidade.estadoNome,
-      cidadeEstadoPais: cidade.estadoPaisNome,
+      cidadeEstado: estado ? estado.nome : '',
+      cidadeEstadoPais: pais ? pais.nome : '',
     });
     setIsCidadeModalOpen(false);
   };
@@ -877,6 +948,10 @@ const FornecedorForm = () => {
                 return !validacao.isValid;
               })()}
               helperText={fieldErrors.cpfCnpj || (() => {
+                const isCidadeBrasileira = fornecedor.cidadeEstadoPais?.toLowerCase().includes('brasil') === true;
+                if (!isCidadeBrasileira && !fornecedor.cpfCnpj) {
+                  return 'Opcional para fornecedores estrangeiros';
+                }
                 const validacao = validarCpfCnpjEmTempoReal(fornecedor.cpfCnpj, fornecedor.tipo);
                 return validacao.message;
               })()}
@@ -894,6 +969,8 @@ const FornecedorForm = () => {
               value={getDisplayValue('rgInscricaoEstadual', fornecedor.rgInscricaoEstadual)}
               onChange={handleRgChange}
               variant="outlined"
+              placeholder={fornecedor.tipo === 'FISICA' ? 'Ex: 123456789' : 'Ex: 123456789012 ou ISENTO'}
+              helperText={fornecedor.tipo === 'FISICA' ? '' : 'Digite os números ou "ISENTO" se aplicável'}
               inputProps={{ maxLength: fornecedor.tipo === 'FISICA' ? 15 : 20 }}
               autoComplete="off"
             />

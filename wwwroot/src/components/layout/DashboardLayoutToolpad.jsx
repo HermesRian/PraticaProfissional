@@ -21,6 +21,7 @@
     AccountBox as AccountBoxIcon,
     AttachMoney as AttachMoneyIcon,
     Map as MapIcon,
+    Badge as BadgeIcon,
   } from '@mui/icons-material';
 
   // Configuração da navegação com ícones específicos
@@ -55,7 +56,7 @@
     {
       segment: 'funcoes-funcionario',
       title: 'Cargos',
-      icon: <WorkIcon />,
+      icon: <BadgeIcon />,
     },
     {
       kind: 'divider',
@@ -89,7 +90,7 @@
     {
       segment: 'estados',
       title: 'Estados',
-      icon: <LocationOnIcon />,
+      icon: <MapIcon />,
     },
     {
       segment: 'cidades',
