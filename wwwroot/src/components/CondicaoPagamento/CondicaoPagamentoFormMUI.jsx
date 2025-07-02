@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-// Importações do Material-UI
 import {
   Box,
   Typography,
@@ -27,7 +26,6 @@ import {
   Calculate as CalculateIcon
 } from '@mui/icons-material';
 
-// Componente de formulário de condição de pagamento
 const CondicaoPagamentoFormMUI = () => {
   const [condicaoPagamento, setCondicaoPagamento] = useState({
     descricao: '',
@@ -49,13 +47,11 @@ const CondicaoPagamentoFormMUI = () => {
   const { id } = useParams();
 
   useEffect(() => {
-    // Buscar formas de pagamento
     fetch('http://localhost:8080/formas-pagamento')
       .then((response) => response.json())
       .then((data) => setFormasPagamento(data))
       .catch((error) => console.error('Erro ao buscar formas de pagamento:', error));
 
-    // Buscar condição de pagamento para edição
     if (id) {
       fetch(`http://localhost:8080/condicoes-pagamento/${id}`)
         .then((response) => response.json())
@@ -89,7 +85,6 @@ const CondicaoPagamentoFormMUI = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     
-    // Limpa o erro do campo quando o usuário começar a digitar
     if (fieldErrors[name]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -108,7 +103,9 @@ const CondicaoPagamentoFormMUI = () => {
       return;
     }
     
-    const parcelasGeradas = Array.from({ length: qtdParcelas }, (_, index) => ({
+    const qtdParcelasLimitada = qtdParcelas > 12 ? 12 : qtdParcelas;
+    
+    const parcelasGeradas = Array.from({ length: qtdParcelasLimitada }, (_, index) => ({
       numeroParcela: index + 1,
       dias: '',
       percentual: '',
@@ -154,12 +151,10 @@ const CondicaoPagamentoFormMUI = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Limpa erros anteriores
     setFieldErrors({});
     setErrorMessage('');
     setErroPercentual(false);
     
-    // Validação de campos obrigatórios
     const errors = {};
     
     if (!condicaoPagamento.descricao?.trim()) {
@@ -170,7 +165,6 @@ const CondicaoPagamentoFormMUI = () => {
       errors.dias = 'Este campo é obrigatório';
     }
     
-    // Validações das parcelas
     if (condicaoPagamento.parcelas.length === 0) {
       setErrorMessage('É necessário criar pelo menos uma parcela.');
       return;
@@ -193,14 +187,12 @@ const CondicaoPagamentoFormMUI = () => {
       return;
     }
     
-    // Se há erros, exibe e para a execução
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setErrorMessage('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
-    // Formatando os dados para corresponder ao modelo esperado pelo backend
     const payload = {
       descricao: condicaoPagamento.descricao,
       dias: parseInt(condicaoPagamento.dias, 10) || 0,
@@ -282,17 +274,16 @@ const CondicaoPagamentoFormMUI = () => {
           }
         }}
       >
-        {/* Cabeçalho com título e switch Ativo */}
+        {/* Cabeçalho */}
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
           mb: 4 
         }}>
-          {/* Espaço vazio à esquerda para centralizar o título */}
           <Box sx={{ width: 120 }}></Box>
           
-          {/* Título centralizado */}
+          {/* Título e switch */}
           <Typography 
             variant="h5" 
             component="h1" 
@@ -302,7 +293,6 @@ const CondicaoPagamentoFormMUI = () => {
             {id ? 'Editar Condição de Pagamento' : 'Cadastrar Nova Condição de Pagamento'}
           </Typography>
 
-          {/* Switch Ativo à direita */}
           <Box sx={{ width: 120, display: 'flex', justifyContent: 'flex-end' }}>
             <FormControlLabel
               control={
@@ -311,7 +301,7 @@ const CondicaoPagamentoFormMUI = () => {
                   onChange={handleChange}
                   name="ativo"
                   color="primary"
-                  disabled={!id} // Desabilita durante cadastro (quando não há id)
+                  disabled={!id}
                 />
               }
               label="Ativo"
@@ -320,7 +310,7 @@ const CondicaoPagamentoFormMUI = () => {
           </Box>
         </Box>
 
-        {/* Linha 1: Código, Descrição, Dias */}
+        {/* Linha 1 */}
         <Grid container spacing={2} alignItems="center" sx={{ mb: 4 }}>
           <Grid item sx={{ width: '8%', minWidth: 100 }}>
             <TextField
@@ -415,18 +405,16 @@ const CondicaoPagamentoFormMUI = () => {
           </Grid>
 
           <Grid item sx={{ width: '15%', minWidth: 120 }}>
-            {/* Espaço vazio para manter alinhamento */}
           </Grid>
         </Grid>
 
-        {/* Seção de Parcelas */}
+        {/* parcelas */}
         <Divider sx={{ my: 3 }} />
         
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#333' }}>
           Parcelas
         </Typography>
 
-        {/* Gerador de Parcelas */}
         <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
           <Grid item xs={12} md={3}>
             <TextField
@@ -436,7 +424,7 @@ const CondicaoPagamentoFormMUI = () => {
               type="number"
               value={numeroParcelas}
               onChange={(e) => setNumeroParcelas(e.target.value)}
-              placeholder="Quantidade"
+              placeholder="Quantidade (máx. 12)"
               variant="outlined"
               inputProps={{ min: 1 }}
             />
@@ -478,75 +466,99 @@ const CondicaoPagamentoFormMUI = () => {
           </Grid>
         </Grid>
 
-        {/* Lista de Parcelas */}
-        {condicaoPagamento.parcelas.map((parcela, index) => (
-          <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }} key={index}>
-            <Grid item xs={6} md={1.5}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Nº"
-                type="number"
-                value={parcela.numeroParcela}
-                onChange={(e) => handleParcelaChange(index, 'numeroParcela', e.target.value)}
-                variant="outlined"
-                inputProps={{ min: 1 }}
-              />
-            </Grid>
-            <Grid item xs={6} md={2}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Dias"
-                type="number"
-                value={parcela.dias}
-                onChange={(e) => handleParcelaChange(index, 'dias', e.target.value)}
-                variant="outlined"
-                inputProps={{ min: 0 }}
-              />
-            </Grid>
-            <Grid item xs={6} md={2}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Percentual (%)"
-                type="number"
-                value={parcela.percentual}
-                onChange={(e) => handleParcelaChange(index, 'percentual', e.target.value)}
-                variant="outlined"
-                inputProps={{ min: 0, max: 100, step: 0.01 }}
-              />
-            </Grid>
-            <Grid item sx={{ width: '30%' }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Forma de Pagamento</InputLabel>
-                <Select
-                  value={parcela.formaPagamentoId}
-                  onChange={(e) => handleParcelaChange(index, 'formaPagamentoId', e.target.value)}
-                  label="Forma de Pagamento"
+        <Box
+          sx={{
+            maxHeight: '400px',
+            overflowY: 'auto',
+            border: condicaoPagamento.parcelas.length > 0 ? '1px solid #e0e0e0' : 'none',
+            borderRadius: 1,
+            p: condicaoPagamento.parcelas.length > 0 ? 1 : 0,
+            mb: 2,
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              backgroundColor: '#f1f1f1',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: '#c1c1c1',
+              borderRadius: '4px',
+              '&:hover': {
+                backgroundColor: '#a1a1a1',
+              },
+            },
+          }}
+        >
+          {condicaoPagamento.parcelas.map((parcela, index) => (
+            <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }} key={index}>
+              <Grid item xs={6} md={1.5}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Nº"
+                  type="number"
+                  value={parcela.numeroParcela}
+                  onChange={(e) => handleParcelaChange(index, 'numeroParcela', e.target.value)}
+                  variant="outlined"
+                  inputProps={{ min: 1 }}
+                />
+              </Grid>
+              <Grid item xs={6} md={2}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Dias"
+                  type="number"
+                  value={parcela.dias}
+                  onChange={(e) => handleParcelaChange(index, 'dias', e.target.value)}
+                  variant="outlined"
+                  inputProps={{ min: 0 }}
+                />
+              </Grid>
+              <Grid item xs={6} md={2}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Percentual (%)"
+                  type="number"
+                  value={parcela.percentual}
+                  onChange={(e) => handleParcelaChange(index, 'percentual', e.target.value)}
+                  variant="outlined"
+                  inputProps={{ min: 0, max: 100, step: 0.01 }}
+                />
+              </Grid>
+              <Grid item sx={{ width: '30%' }}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Forma de Pagamento</InputLabel>
+                  <Select
+                    value={parcela.formaPagamentoId}
+                    onChange={(e) => handleParcelaChange(index, 'formaPagamentoId', e.target.value)}
+                    label="Forma de Pagamento"
+                  >
+                    <MenuItem value="">Selecione...</MenuItem>
+                    {formasPagamento.map((forma) => (
+                      <MenuItem key={forma.id} value={forma.id}>
+                        {forma.descricao}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={1}>
+                <IconButton
+                  color="error"
+                  onClick={() => handleRemoverParcela(index)}
+                  size="small"
                 >
-                  <MenuItem value="">Selecione...</MenuItem>
-                  {formasPagamento.map((forma) => (
-                    <MenuItem key={forma.id} value={forma.id}>
-                      {forma.descricao}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  <DeleteIcon />
+                </IconButton>
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={1}>
-              <IconButton
-                color="error"
-                onClick={() => handleRemoverParcela(index)}
-                size="small"
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Grid>
-          </Grid>
-        ))}
+          ))}
+        </Box>
 
-        {/* Mensagem de erro */}
+        {/* erros */}
         {(errorMessage || erroPercentual) && (
           <Alert 
             severity="error" 
@@ -561,7 +573,7 @@ const CondicaoPagamentoFormMUI = () => {
           </Alert>
         )}
 
-        {/* Botões e Informações de registro */}
+        {/* Botões */}
         <Box
           sx={{
             display: 'flex',
@@ -579,7 +591,7 @@ const CondicaoPagamentoFormMUI = () => {
             boxShadow: '0px -4px 8px rgba(0, 0, 0, 0.05)'
           }}
         >
-          {/* Informações de registro - lado esquerdo */}
+          {/* registro */}
           <Stack spacing={0.5} sx={{ flex: 1 }}>
             {condicaoPagamento.dataCadastro && (
               <Typography variant="caption" color="text.secondary">
@@ -593,7 +605,7 @@ const CondicaoPagamentoFormMUI = () => {
             )}
           </Stack>
 
-          {/* Botões - lado direito */}
+          {/* Botões */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
               variant="contained"

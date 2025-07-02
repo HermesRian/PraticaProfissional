@@ -14,7 +14,6 @@ import {
   formatIE 
 } from '../../utils/documentValidation';
 
-// Importações do Material-UI
 import {
   Box,
   Typography,
@@ -41,7 +40,6 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 
-// Funções auxiliares para conversão de valores
 const converterEstadoCivilParaNumero = (estadoCivil) => {
   switch (estadoCivil) {
     case 'SOLTEIRO': return 0;
@@ -51,7 +49,7 @@ const converterEstadoCivilParaNumero = (estadoCivil) => {
     case 'UNIAO_ESTAVEL': return 4;
     case 'SEPARADO': return 5;
     case 'OUTRO': return 6;
-    default: return null; // Quando não há valor selecionado
+    default: return null;
   }
 };
 
@@ -70,7 +68,6 @@ const converterNumeroParaEstadoCivil = (numero) => {
   }
 };
 
-// Componente de formulário de fornecedor
 const FornecedorForm = () => {
   const [fornecedor, setFornecedor] = useState({
     razaoSocial: '',
@@ -94,8 +91,8 @@ const FornecedorForm = () => {
     rgInscricaoEstadual: '',
     dataNascimento: '',
     estadoCivil: '',
-    tipo: 'JURIDICA', // Padrão: pessoa jurídica (fornecedores geralmente são empresas)
-    sexo: '', // Começa vazio para evitar pressuposições
+    tipo: 'JURIDICA', 
+    sexo: '',
     condicaoPagamentoId: '',
     condicaoPagamentoDescricao: '',
     observacao: '',
@@ -112,7 +109,6 @@ const FornecedorForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // Carregar estados e países
   useEffect(() => {
     Promise.all([
       fetch('http://localhost:8080/estados').then(res => res.json()),
@@ -130,10 +126,9 @@ const FornecedorForm = () => {
       fetch(`http://localhost:8080/fornecedores/${id}`)
         .then((response) => response.json())
         .then(async (data) => {
-          console.log('Dados recebidos do backend:', data); // Debug para ver os dados
+          console.log('Dados recebidos do backend:', data); 
           console.log('cidadeId:', data.cidadeId, 'condicaoPagamentoId:', data.condicaoPagamentoId);
           
-          // Convertendo os valores numéricos recebidos do backend para strings
           const tipoFormatado = typeof data.tipo === 'number' 
             ? (data.tipo === 0 ? 'FISICA' : 'JURIDICA') 
             : (data.tipo || 'JURIDICA');
@@ -142,7 +137,6 @@ const FornecedorForm = () => {
             ? (data.sexo === 0 ? 'M' : data.sexo === 1 ? 'F' : 'O') 
             : (data.sexo || '');
 
-          // Buscar nome da cidade se cidadeId estiver presente
           let cidadeNome = '';
           let cidadeEstado = '';
           let cidadeEstadoPais = '';
@@ -154,14 +148,12 @@ const FornecedorForm = () => {
                 const cidadeData = await cidadeResponse.json();
                 cidadeNome = cidadeData.nome || '';
                 
-                // Buscar informações do estado
                 if (cidadeData.estadoId) {
                   const estadoResponse = await fetch(`http://localhost:8080/estados/${cidadeData.estadoId}`);
                   if (estadoResponse.ok) {
                     const estadoData = await estadoResponse.json();
                     cidadeEstado = estadoData.nome || '';
                     
-                    // Buscar informações do país
                     if (estadoData.paisId) {
                       const paisResponse = await fetch(`http://localhost:8080/paises/${estadoData.paisId}`);
                       if (paisResponse.ok) {
@@ -184,19 +176,11 @@ const FornecedorForm = () => {
             }
           }
 
-          // Buscar descrição da condição de pagamento se condicaoPagamentoId estiver presente
           let condicaoPagamentoDescricao = '';
           if (data.condicaoPagamentoId) {
             try {
               console.log('Buscando condição de pagamento com ID:', data.condicaoPagamentoId);
-              // Testar ambas as URLs possíveis
               let condicaoResponse = await fetch(`http://localhost:8080/condicoes-pagamento/${data.condicaoPagamentoId}`);
-              
-              if (!condicaoResponse.ok) {
-                // Tentar URL alternativa se a primeira falhar
-                console.log('Tentando URL alternativa para condição de pagamento...');
-                condicaoResponse = await fetch(`http://localhost:8080/condicao-pagamento/${data.condicaoPagamentoId}`);
-              }
               
               if (condicaoResponse.ok) {
                 const condicaoData = await condicaoResponse.json();
@@ -233,7 +217,6 @@ const FornecedorForm = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     
-    // Limpa o erro do campo quando o usuário começar a digitar
     if (fieldErrors[name]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -241,16 +224,14 @@ const FornecedorForm = () => {
         return newErrors;
       });
     }
-      // Ações especiais para diferentes campos
     if (name === 'tipo') {
-      // Limpa o CPF/CNPJ e RG/Inscrição Estadual quando muda o tipo de pessoa
       setFornecedor({ 
         ...fornecedor, 
         [name]: value,
-        cpfCnpj: '', // Limpa o campo para aplicar a máscara correta
-        rgInscricaoEstadual: '', // Limpa o campo de RG/IE também
-        sexo: value === 'FISICA' ? fornecedor.sexo || '' : '', // Mantém vazio quando muda para Física
-        estadoCivil: value === 'JURIDICA' ? '' : fornecedor.estadoCivil // Limpa estado civil para Pessoa Jurídica
+        cpfCnpj: '', 
+        rgInscricaoEstadual: '', 
+        sexo: value === 'FISICA' ? fornecedor.sexo || '' : '', 
+        estadoCivil: value === 'JURIDICA' ? '' : fornecedor.estadoCivil
       });
     } else {
       setFornecedor({ ...fornecedor, [name]: type === 'checkbox' ? checked : value });
@@ -914,7 +895,6 @@ const FornecedorForm = () => {
                   <MenuItem value="">Selecione...</MenuItem>
                   <MenuItem value="M">Masculino</MenuItem>
                   <MenuItem value="F">Feminino</MenuItem>
-                  <MenuItem value="O">Outro</MenuItem>
                 </Select>
               </FormControl>
             </Grid>

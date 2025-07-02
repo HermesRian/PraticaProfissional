@@ -57,7 +57,7 @@ const ClienteListMUI = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [mostrarDocumentoCompleto, setMostrarDocumentoCompleto] = useState(false);
-  const [filtroStatus, setFiltroStatus] = useState('todos'); // 'todos', 'ativos', 'inativos'
+  const [filtroStatus, setFiltroStatus] = useState('todos');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -129,12 +129,10 @@ const ClienteListMUI = () => {
     
     if (window.confirm(mensagem)) {
       if (isAtivo) {
-        // Para inativar, usa DELETE
         fetch(`http://localhost:8080/clientes/${id}`, {
           method: 'DELETE',
         })
           .then(() => {
-            // Atualiza o status do cliente na lista local
             setClientes(clientes.map(cliente => 
               cliente.id === id ? { ...cliente, ativo: false } : cliente
             ));
@@ -144,13 +142,10 @@ const ClienteListMUI = () => {
             setError(`Erro ao ${acao} cliente`);
           });
       } else {
-        // Para ativar, usa PUT com os dados completos do cliente
         const clienteAtualizado = {
           ...cliente,
           ativo: true,
-          // Convertendo tipo para Integer conforme backend
           tipo: getTipoLabel(cliente.tipo) === 'Pessoa Física' ? 0 : 1,
-          // Garantindo que campos numéricos estejam corretos
           limiteCredito: cliente.limiteCredito ? parseFloat(cliente.limiteCredito) : null,
           limiteCredito2: cliente.limiteCredito2 ? parseFloat(cliente.limiteCredito2) : null,
           dataNascimento: cliente.dataNascimento || null,
@@ -171,7 +166,6 @@ const ClienteListMUI = () => {
             return response.json();
           })
           .then(() => {
-            // Atualiza o status do cliente na lista local
             setClientes(clientes.map(cliente => 
               cliente.id === id ? { ...cliente, ativo: true } : cliente
             ));
@@ -184,7 +178,6 @@ const ClienteListMUI = () => {
     }
   };
   const handleView = async (cliente) => {
-    // Buscar descrição da condição de pagamento se condicaoPagamentoId estiver presente
     let clienteComCondicaoPagamento = { ...cliente };
     
     if (cliente.condicaoPagamentoId) {
@@ -215,21 +208,18 @@ const ClienteListMUI = () => {
     setIsModalOpen(false);
   };
   const clientesFiltrados = clientes.filter(cliente => {
-    // Filtro por texto (código, nome, CPF/CNPJ, email, cidade)
     const matchesText = cliente.id?.toString().includes(filtro) ||
       cliente.nome?.toLowerCase().includes(filtro.toLowerCase()) ||
       cliente.cnpjCpf?.toLowerCase().includes(filtro.toLowerCase()) ||
       cliente.email?.toLowerCase().includes(filtro.toLowerCase()) ||
       getCidadeNome(cliente.cidadeId)?.toLowerCase().includes(filtro.toLowerCase());
     
-    // Filtro por status
     const matchesStatus = filtroStatus === 'todos' || 
       (filtroStatus === 'ativos' && cliente.ativo) ||
       (filtroStatus === 'inativos' && !cliente.ativo);
     
     return matchesText && matchesStatus;
   });
-  // As funções de formatação formatTelefone e formatCEP foram movidas para utils/documentValidation.js
 
   const getTipoLabel = (tipo) => {
     if (typeof tipo === 'number') {
@@ -284,7 +274,7 @@ const ClienteListMUI = () => {
           borderRadius: 2,
           overflow: 'hidden'
         }}
-      >        {/* Cabeçalho com pesquisa e botão */}        <Box sx={{ 
+      >        {/* Cabeçalho  */}        <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
@@ -600,7 +590,8 @@ const ClienteListMUI = () => {
         
         {clienteSelecionado && (
           <DialogContent sx={{ p: 4 }}>
-            {/* Cabeçalho com título e switch Ativo */}
+
+            {/* titulo e switch */}
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
@@ -630,7 +621,7 @@ const ClienteListMUI = () => {
               </Box>
             </Box>
 
-            {/* Linha 1: Código, Tipo de Pessoa, Nome, Apelido, Estado Civil */}
+            {/* Linha 1*/}
             <Grid container spacing={2} alignItems="center" sx={{ mb: 4 }}>
               <Grid item sx={{ width: '6%', minWidth: 80 }}>
                 <TextField
@@ -688,7 +679,7 @@ const ClienteListMUI = () => {
               )}
             </Grid>
 
-            {/* Linha 2: Rua, Número, Complemento, Bairro, CEP, Cidade */}
+            {/* Linha 2 */}
             <Grid container spacing={2} sx={{ mb: 4 }}>
               <Grid item sx={{ width: '25%' }}>
                 <TextField
@@ -755,7 +746,8 @@ const ClienteListMUI = () => {
                   variant="outlined"
                 />
               </Grid>
-            </Grid>            {/* Linha 3: Telefone, Email, Sexo (somente para PF), Data de Nascimento */}
+            </Grid>            
+            {/* Linha 3 */}
             <Grid container spacing={2} sx={{ mb: 4 }}>
               <Grid item sx={{ width: '15%', minWidth: 150 }}>
                 <TextField
@@ -806,7 +798,7 @@ const ClienteListMUI = () => {
               </Grid>
 
 
-            </Grid>            {/* Linha 4: RG/IE, CPF/CNPJ, Limite de Crédito, Condição de Pagamento */}
+            </Grid>            {/* Linha 4 */}
             <Grid container spacing={2} sx={{ mb: 4 }}>
                 <Grid item sx={{ width: '20%' }}>
                 <TextField
@@ -855,7 +847,9 @@ const ClienteListMUI = () => {
                   InputProps={{ readOnly: true }}
                   variant="outlined"
                 />
-              </Grid>            </Grid>            {/* Linha 5: Observações */}
+              </Grid>            </Grid>            
+
+              {/* Linha 5: Observações */}
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item sx={{width: '100%'}}>
                 <TextField
@@ -871,7 +865,7 @@ const ClienteListMUI = () => {
               </Grid>
             </Grid>
 
-            {/* Informações de cadastro */}
+            {/* registros */}
             <Box
               sx={{
                 display: 'flex',
