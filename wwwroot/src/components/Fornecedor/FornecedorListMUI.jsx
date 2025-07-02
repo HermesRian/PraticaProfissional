@@ -122,25 +122,65 @@ const FornecedorListMUI = () => {
   const handleDelete = (id) => {
     const fornecedor = fornecedores.find(f => f.id === id);
     const isAtivo = fornecedor?.ativo;
-    const acao = isAtivo ? 'excluir' : 'ativar';
+    const acao = isAtivo ? 'inativar' : 'ativar';
     const mensagem = isAtivo ? 
-      'Tem certeza que deseja excluir este fornecedor?' : 
+      'Tem certeza que deseja inativar este fornecedor?' : 
       'Tem certeza que deseja ativar este fornecedor?';
     
     if (window.confirm(mensagem)) {
-      fetch(`http://localhost:8080/fornecedores/${id}`, {
-        method: 'DELETE',
-      })
-        .then(() => {
-          // Atualiza o status do fornecedor na lista local
-          setFornecedores(fornecedores.map(fornecedor => 
-            fornecedor.id === id ? { ...fornecedor, ativo: !fornecedor.ativo } : fornecedor
-          ));
+      if (isAtivo) {
+        // Para inativar, usa DELETE
+        fetch(`http://localhost:8080/fornecedores/${id}`, {
+          method: 'DELETE',
         })
-        .catch((error) => {
-          console.error(`Erro ao ${acao} fornecedor:`, error);
-          setError(`Erro ao ${acao} fornecedor`);
-        });
+          .then(() => {
+            // Atualiza o status do fornecedor na lista local
+            setFornecedores(fornecedores.map(fornecedor => 
+              fornecedor.id === id ? { ...fornecedor, ativo: false } : fornecedor
+            ));
+          })
+          .catch((error) => {
+            console.error(`Erro ao ${acao} fornecedor:`, error);
+            setError(`Erro ao ${acao} fornecedor`);
+          });
+      } else {
+        // Para ativar, usa PUT com os dados completos do fornecedor
+        const fornecedorAtualizado = {
+          ...fornecedor,
+          ativo: true,
+          // Convertendo tipo para Integer conforme backend
+          tipo: getTipoLabel(fornecedor.tipo) === 'Pessoa Física' ? 0 : 1,
+          // Garantindo que campos numéricos estejam corretos
+          limiteCredito: fornecedor.limiteCredito ? parseFloat(fornecedor.limiteCredito) : null,
+          limiteCredito2: fornecedor.limiteCredito2 ? parseFloat(fornecedor.limiteCredito2) : null,
+          dataNascimento: fornecedor.dataNascimento || null,
+          cpfCnpj: fornecedor.cpfCnpj?.trim() || null,
+        };
+
+        fetch(`http://localhost:8080/fornecedores/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(fornecedorAtualizado),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('Erro ao ativar fornecedor');
+            }
+            return response.json();
+          })
+          .then(() => {
+            // Atualiza o status do fornecedor na lista local
+            setFornecedores(fornecedores.map(fornecedor => 
+              fornecedor.id === id ? { ...fornecedor, ativo: true } : fornecedor
+            ));
+          })
+          .catch((error) => {
+            console.error(`Erro ao ${acao} fornecedor:`, error);
+            setError(`Erro ao ${acao} fornecedor`);
+          });
+      }
     }
   };
 
@@ -507,7 +547,7 @@ const FornecedorListMUI = () => {
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={fornecedor.ativo ? "Excluir" : "Ativar"}>
+                      <Tooltip title={fornecedor.ativo ? "Inativar" : "Ativar"}>
                         <IconButton
                           size="small"
                           onClick={() => handleDelete(fornecedor.id)}

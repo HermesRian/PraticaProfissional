@@ -109,7 +109,6 @@ const ClienteForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // Carregar estados e países
   useEffect(() => {
     Promise.all([
       fetch('http://localhost:8080/estados').then(res => res.json()),
@@ -149,14 +148,12 @@ const ClienteForm = () => {
                 const cidadeData = await cidadeResponse.json();
                 cidadeNome = cidadeData.nome || '';
                 
-                // Buscar informações do estado
                 if (cidadeData.estadoId) {
                   const estadoResponse = await fetch(`http://localhost:8080/estados/${cidadeData.estadoId}`);
                   if (estadoResponse.ok) {
                     const estadoData = await estadoResponse.json();
                     cidadeEstado = estadoData.nome || '';
                     
-                    // Buscar informações do país
                     if (estadoData.paisId) {
                       const paisResponse = await fetch(`http://localhost:8080/paises/${estadoData.paisId}`);
                       if (paisResponse.ok) {
@@ -225,22 +222,19 @@ const ClienteForm = () => {
       });
     }
     if (name === 'tipo') {
-      // Limpa o CPF/CNPJ e RG/Inscrição Estadual quando muda o tipo de pessoa
       setCliente({ 
         ...cliente, 
         [name]: value,
-        cnpjCpf: '', // Limpa o campo para aplicar a máscara correta
-        rgInscricaoEstadual: '', // Limpa o campo de RG/IE também
-        sexo: value === 'FISICA' ? cliente.sexo || '' : '', // Mantém vazio quando muda para Física
-        estadoCivil: value === 'JURIDICA' ? '' : cliente.estadoCivil // Limpa estado civil para Pessoa Jurídica
+        cnpjCpf: '',
+        rgInscricaoEstadual: '',
+        sexo: value === 'FISICA' ? cliente.sexo || '' : '',
+        estadoCivil: value === 'JURIDICA' ? '' : cliente.estadoCivil
       });
     } else {
       setCliente({ ...cliente, [name]: type === 'checkbox' ? checked : value });
     }
-  };  // As funções de formatação de CPF e CNPJ foram movidas para utils/documentValidation.js
-  // As funções de formatação (CEP, Telefone, RG, IE) foram movidas para utils/documentValidation.js// A função validarCpfCnpjEmTempoReal foi movida para utils/documentValidation.js
+  };
 
-  // Função específica para campos numéricos com máscara
   const handleNumericChange = (e, maxLength, maskFunction) => {
     const { name } = e.target;
     let value = e.target.value.replace(/[^0-9]/g, '');
@@ -249,7 +243,6 @@ const ClienteForm = () => {
       value = value.substring(0, maxLength);
     }
     
-    // Limpa o erro do campo quando o usuário começar a digitar
     if (fieldErrors[name]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -258,10 +251,8 @@ const ClienteForm = () => {
       });
     }
     
-    // Armazena o valor limpo no estado
     setCliente({ ...cliente, [name]: value });
   };
-  // Função para obter valor formatado para exibição
   const getDisplayValue = (fieldName, value) => {
     if (!value) return '';
     
@@ -276,7 +267,6 @@ const ClienteForm = () => {
         if (cliente.tipo === 'FISICA') {
           return formatRG(value);
         } else {
-          // Para IE: se contém apenas números, formata; senão retorna como está (ex: "ISENTO")
           if (/^\d+$/.test(value)) {
             return formatIE(value);
           } else {
@@ -287,31 +277,25 @@ const ClienteForm = () => {
         return value;
     }
   };
-  // Função específica para RG/IE (permite texto quando pessoa física para IE poder ser "ISENTO")
   const handleRgChange = (e) => {
     const { name } = e.target;
     let value = e.target.value;
     
     if (cliente.tipo === 'FISICA') {
-      // Para RG: permite números e X apenas no final
       value = value.replace(/[^0-9Xx]/g, '').toUpperCase();
       if (value.includes('X') && value.indexOf('X') !== value.length - 1) {
         value = value.replace(/X/g, '');
       }
-      // Limita a 9 caracteres para RG
       if (value.length > 9) {
         value = value.substring(0, 9);
       }
     } else {
-      // Para IE: permite texto (para "ISENTO") ou números
       value = value.toUpperCase();
-      // Limita a 20 caracteres para IE
-      if (value.length > 20) {
-        value = value.substring(0, 20);
+      if (value.length > 12) {
+        value = value.substring(0, 12);
       }
     }
     
-    // Limpa o erro do campo quando o usuário começar a digitar
     if (fieldErrors[name]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -324,10 +308,8 @@ const ClienteForm = () => {
   };const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Limpa erros anteriores
     setFieldErrors({});
     setErrorMessage('');
-      // Validação de campos obrigatórios
     const errors = {};
     
     if (!cliente.nome?.trim()) {
@@ -358,39 +340,25 @@ const ClienteForm = () => {
       errors.email = 'Este campo é obrigatório';
     }
     
-    // CPF/CNPJ não é validado como obrigatório aqui pois depende se é cliente brasileiro ou estrangeiro
-    // A validação será feita pelo backend
     
     if (!cliente.cidadeId) {
       errors.cidade = 'Selecione uma cidade';
     }
     
-    // Se há erros, exibe e para a execução
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
-      setShowRequiredErrors(true);
-      setErrorMessage('Por favor, preencha todos os campos obrigatórios.');
-      return;
-    }
     
-    // Validando campos obrigatórios
     if (!cliente.cidadeId) {
-   //   setErrorMessage('Por favor, selecione uma cidade.');
       return;
     }
     
-    // Validação do telefone (deve ter 10 ou 11 dígitos)
     const telefoneSemMascara = cliente.telefone?.replace(/\D/g, '') || '';
     if (telefoneSemMascara.length !== 0 && (telefoneSemMascara.length < 10 || telefoneSemMascara.length > 11)) {
       setErrorMessage('O telefone deve ter 10 ou 11 dígitos.');
       return;
     }
-    // Validação do CPF/CNPJ (apenas para cidades brasileiras)
     const cpfCnpjSemMascara = cliente.cnpjCpf?.replace(/\D/g, '') || '';
     const isCpf = cliente.tipo === 'FISICA';
     const tamanhoEsperado = isCpf ? 11 : 14;
     
-    // Verifica se a cidade é brasileira (se o país contém "Brasil" no nome)
     const isCidadeBrasileira = cliente.cidadeEstadoPais?.toLowerCase().includes('brasil') === true;
     
     // Só valida CPF/CNPJ se tiver conteúdo OU se for cidade brasileira

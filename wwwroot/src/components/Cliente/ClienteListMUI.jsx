@@ -122,25 +122,65 @@ const ClienteListMUI = () => {
   const handleDelete = (id) => {
     const cliente = clientes.find(c => c.id === id);
     const isAtivo = cliente?.ativo;
-    const acao = isAtivo ? 'excluir' : 'ativar';
+    const acao = isAtivo ? 'inativar' : 'ativar';
     const mensagem = isAtivo ? 
-      'Tem certeza que deseja excluir este cliente?' : 
+      'Tem certeza que deseja inativar este cliente?' : 
       'Tem certeza que deseja ativar este cliente?';
     
     if (window.confirm(mensagem)) {
-      fetch(`http://localhost:8080/clientes/${id}`, {
-        method: 'DELETE',
-      })
-        .then(() => {
-          // Atualiza o status do cliente na lista local
-          setClientes(clientes.map(cliente => 
-            cliente.id === id ? { ...cliente, ativo: !cliente.ativo } : cliente
-          ));
+      if (isAtivo) {
+        // Para inativar, usa DELETE
+        fetch(`http://localhost:8080/clientes/${id}`, {
+          method: 'DELETE',
         })
-        .catch((error) => {
-          console.error(`Erro ao ${acao} cliente:`, error);
-          setError(`Erro ao ${acao} cliente`);
-        });
+          .then(() => {
+            // Atualiza o status do cliente na lista local
+            setClientes(clientes.map(cliente => 
+              cliente.id === id ? { ...cliente, ativo: false } : cliente
+            ));
+          })
+          .catch((error) => {
+            console.error(`Erro ao ${acao} cliente:`, error);
+            setError(`Erro ao ${acao} cliente`);
+          });
+      } else {
+        // Para ativar, usa PUT com os dados completos do cliente
+        const clienteAtualizado = {
+          ...cliente,
+          ativo: true,
+          // Convertendo tipo para Integer conforme backend
+          tipo: getTipoLabel(cliente.tipo) === 'Pessoa Física' ? 0 : 1,
+          // Garantindo que campos numéricos estejam corretos
+          limiteCredito: cliente.limiteCredito ? parseFloat(cliente.limiteCredito) : null,
+          limiteCredito2: cliente.limiteCredito2 ? parseFloat(cliente.limiteCredito2) : null,
+          dataNascimento: cliente.dataNascimento || null,
+          cnpjCpf: cliente.cnpjCpf?.trim() || null,
+        };
+
+        fetch(`http://localhost:8080/clientes/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(clienteAtualizado),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('Erro ao ativar cliente');
+            }
+            return response.json();
+          })
+          .then(() => {
+            // Atualiza o status do cliente na lista local
+            setClientes(clientes.map(cliente => 
+              cliente.id === id ? { ...cliente, ativo: true } : cliente
+            ));
+          })
+          .catch((error) => {
+            console.error(`Erro ao ${acao} cliente:`, error);
+            setError(`Erro ao ${acao} cliente`);
+          });
+      }
     }
   };
   const handleView = async (cliente) => {
@@ -501,7 +541,7 @@ const ClienteListMUI = () => {
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={cliente.ativo ? "Excluir" : "Ativar"}>
+                      <Tooltip title={cliente.ativo ? "Inativar" : "Ativar"}>
                         <IconButton
                           size="small"
                           onClick={() => handleDelete(cliente.id)}
