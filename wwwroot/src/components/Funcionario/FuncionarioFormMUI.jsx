@@ -10,7 +10,6 @@ import {
   formatRG 
 } from '../../utils/documentValidation';
 
-// Importações do Material-UI
 import {
   Box,
   Typography,
@@ -56,10 +55,10 @@ const FuncionarioFormMUI = () => {
     rgInscricaoEstadual: '',
     cnh: '',
     dataValidadeCnh: '',
-    sexo: 0, // Integer: 0=Masculino, 1=Feminino, 2=Outro
-    estadoCivil: 0, // Integer: 0=Solteiro, 1=Casado, etc.
-    isBrasileiro: 1, // Integer: 1=Brasileiro, 0=Estrangeiro
-    nacionalidade: 0, // Integer para nacionalidade
+    sexo: 0,
+    estadoCivil: 0,
+    isBrasileiro: 1,
+    nacionalidade: 0,
     dataNascimento: '',
     observacao: '',
     dataCriacao: '',
@@ -80,7 +79,6 @@ const FuncionarioFormMUI = () => {
         .then(async (data) => {
           console.log('Dados recebidos do backend:', data);
           
-          // Buscar nome da cidade se cidadeId estiver presente
           let cidadeNome = '';
           if (data.cidadeId) {
             try {
@@ -94,7 +92,6 @@ const FuncionarioFormMUI = () => {
             }
           }
 
-          // Buscar nome do cargo se cargoId estiver presente
           let cargoNome = '';
           if (data.cargoId) {
             try {
@@ -112,15 +109,12 @@ const FuncionarioFormMUI = () => {
             ...data,
             cidadeNome: cidadeNome,
             cargoNome: cargoNome,
-            // Formatar datas para o padrão do HTML input date
             dataAdmissao: data.dataAdmissao ? data.dataAdmissao.split('T')[0] : '',
             dataDemissao: data.dataDemissao ? data.dataDemissao.split('T')[0] : '',
             dataNascimento: data.dataNascimento ? data.dataNascimento.split('T')[0] : '',
             dataValidadeCnh: data.dataValidadeCnh ? data.dataValidadeCnh.split('T')[0] : '',
-            // Mapear campos de data do backend
             dataCriacao: data.dataCriacao || '',
             dataAlteracao: data.dataAlteracao || '',
-            // Garantir que campos Integer tenham valores padrão
             sexo: data.sexo !== null && data.sexo !== undefined ? data.sexo : 0,
             estadoCivil: data.estadoCivil !== null && data.estadoCivil !== undefined ? data.estadoCivil : 0,
             isBrasileiro: data.isBrasileiro !== null && data.isBrasileiro !== undefined ? data.isBrasileiro : 1,
@@ -136,7 +130,6 @@ const FuncionarioFormMUI = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     
-    // Limpa o erro do campo quando o usuário começar a digitar
     if (fieldErrors[name]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -148,7 +141,6 @@ const FuncionarioFormMUI = () => {
     setFuncionario({ ...funcionario, [name]: type === 'checkbox' ? checked : value });
   };
 
-  // Função específica para campos numéricos com máscara
   const handleNumericChange = (e, maxLength, maskFunction) => {
     const { name } = e.target;
     let value = e.target.value.replace(/[^0-9]/g, '');
@@ -157,7 +149,6 @@ const FuncionarioFormMUI = () => {
       value = value.substring(0, maxLength);
     }
     
-    // Limpa o erro do campo quando o usuário começar a digitar
     if (fieldErrors[name]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -166,11 +157,9 @@ const FuncionarioFormMUI = () => {
       });
     }
     
-    // Armazena o valor limpo no estado
     setFuncionario({ ...funcionario, [name]: value });
   };
 
-  // Função para obter valor formatado para exibição
   const getDisplayValue = (fieldName, value) => {
     if (!value) return '';
     
@@ -180,7 +169,7 @@ const FuncionarioFormMUI = () => {
       case 'cep':
         return formatCEP(value);
       case 'cpfCnpj':
-        return formatCPF(value); // Assumindo que é sempre CPF para funcionários
+        return formatCPF(value);
       case 'rgInscricaoEstadual':
         return formatRG(value);
       default:
@@ -191,11 +180,9 @@ const FuncionarioFormMUI = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Limpa erros anteriores
     setFieldErrors({});
     setErrorMessage('');
     
-    // Validação de campos obrigatórios
     const errors = {};
     
     if (!funcionario.nome?.trim()) {
@@ -246,19 +233,15 @@ const FuncionarioFormMUI = () => {
       errors.dataAdmissao = 'Este campo é obrigatório';
     }
     
-    // Se há erros, exibe e para a execução
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setErrorMessage('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
-    // Formatando os dados para corresponder ao modelo esperado pelo backend
     const funcionarioFormatado = {
       ...funcionario,
-      // Convertendo valores numéricos
       salario: funcionario.salario ? parseFloat(funcionario.salario) : null,
-      // Garantindo que os campos obrigatórios não estejam vazios
       dataNascimento: funcionario.dataNascimento || null,
       dataDemissao: funcionario.dataDemissao || null,
       dataValidadeCnh: funcionario.dataValidadeCnh || null,
