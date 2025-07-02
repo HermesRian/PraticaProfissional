@@ -864,6 +864,9 @@ const ClienteForm = () => {
               type="date"
               value={cliente.dataNascimento ? cliente.dataNascimento.split('T')[0] : ''}
               onChange={handleChange}
+              inputProps={{ 
+                max: new Date().toISOString().split('T')[0]
+              }}
               InputLabelProps={{ shrink: true }}
               variant="outlined"
               error={false}
@@ -885,6 +888,7 @@ const ClienteForm = () => {
               }}
               variant="outlined"
               error={!!fieldErrors.cnpjCpf}
+              helperText={fieldErrors.cnpjCpf || ''}
               inputProps={{ inputMode: 'numeric' }}
               autoComplete="off"
             />
@@ -925,6 +929,7 @@ const ClienteForm = () => {
               }}
               variant="outlined"
               error={!!fieldErrors.limiteCredito}
+              helperText={fieldErrors.limiteCredito || ''}
             />
           </Grid>
 

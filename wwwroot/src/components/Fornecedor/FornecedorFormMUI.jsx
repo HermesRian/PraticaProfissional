@@ -391,21 +391,26 @@ const FornecedorForm = () => {
     // Se há erros, exibe e para a execução
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
-      setShowRequiredErrors(true);
-      setErrorMessage('Por favor, preencha todos os campos obrigatórios.');
-      return;
-    }
-    
-    // Validando campos obrigatórios
-    if (!fornecedor.cidadeId) {
-   //   setErrorMessage('Por favor, selecione uma cidade.');
       return;
     }
     
     // Validação do telefone (deve ter 10 ou 11 dígitos)
     const telefoneSemMascara = fornecedor.telefone?.replace(/\D/g, '') || '';
     if (telefoneSemMascara.length !== 0 && (telefoneSemMascara.length < 10 || telefoneSemMascara.length > 11)) {
-      setErrorMessage('O telefone deve ter 10 ou 11 dígitos.');
+      setFieldErrors(prev => ({
+        ...prev,
+        telefone: 'O telefone deve ter 10 ou 11 dígitos.'
+      }));
+      return;
+    }
+    
+    // Validação do CEP (deve ter 8 dígitos)
+    const cepSemMascara = fornecedor.cep?.replace(/\D/g, '') || '';
+    if (cepSemMascara.length !== 0 && cepSemMascara.length !== 8) {
+      setFieldErrors(prev => ({
+        ...prev,
+        cep: 'O CEP deve ter exatamente 8 dígitos.'
+      }));
       return;
     }
       // Validação do CPF/CNPJ (apenas para cidades brasileiras)
@@ -448,13 +453,6 @@ const FornecedorForm = () => {
         }));
         return;
       }
-    }
-    
-    // Validação do CEP
-    const cepSemMascara = fornecedor.cep?.replace(/\D/g, '') || '';
-    if (cepSemMascara.length !== 0 && cepSemMascara.length !== 8) {
-      //setErrorMessage('O CEP deve ter exatamente 8 dígitos.');
-      return;
     }
 
     // Validação do limite de crédito
@@ -822,8 +820,8 @@ const FornecedorForm = () => {
               value={getDisplayValue('cep', fornecedor.cep)}
               onChange={e => handleNumericChange(e, 8)}
               variant="outlined"
-              error={!!fieldErrors.cep || (fornecedor.cep && fornecedor.cep.length !== 8)}
-              helperText={fieldErrors.cep || (fornecedor.cep && fornecedor.cep.length !== 8 ? 'CEP inválido' : '')}
+              error={!!fieldErrors.cep}
+              helperText={fieldErrors.cep || ''}
               inputProps={{ inputMode: 'numeric' }}
               autoComplete="off"
             />
@@ -880,8 +878,8 @@ const FornecedorForm = () => {
               value={getDisplayValue('telefone', fornecedor.telefone)}
               onChange={e => handleNumericChange(e, 11)}
               variant="outlined"
-              error={!!fieldErrors.telefone || (fornecedor.telefone && (fornecedor.telefone.length < 10 || fornecedor.telefone.length > 11))}
-              helperText={fieldErrors.telefone || (fornecedor.telefone && (fornecedor.telefone.length < 10 || fornecedor.telefone.length > 11) ? 'Telefone inválido (10 ou 11 dígitos)' : '')}
+              error={!!fieldErrors.telefone}
+              helperText={fieldErrors.telefone || ''}
               inputProps={{ inputMode: 'numeric' }}
               autoComplete="off"
             />
@@ -931,6 +929,9 @@ const FornecedorForm = () => {
               type="date"
               value={fornecedor.dataNascimento ? fornecedor.dataNascimento.split('T')[0] : ''}
               onChange={handleChange}
+              inputProps={{ 
+                max: new Date().toISOString().split('T')[0]
+              }}
               InputLabelProps={{ shrink: true }}
               variant="outlined"
               error={false}
@@ -954,18 +955,8 @@ const FornecedorForm = () => {
                 handleNumericChange(e, maxLength);
               }}
               variant="outlined"
-              error={!!fieldErrors.cpfCnpj || (() => {
-                const validacao = validarCpfCnpjEmTempoReal(fornecedor.cpfCnpj, fornecedor.tipo);
-                return !validacao.isValid;
-              })()}
-              helperText={fieldErrors.cpfCnpj || (() => {
-                const isCidadeBrasileira = fornecedor.cidadeEstadoPais?.toLowerCase().includes('brasil') === true;
-                if (!isCidadeBrasileira && !fornecedor.cpfCnpj) {
-                  return 'Opcional para fornecedores estrangeiros';
-                }
-                const validacao = validarCpfCnpjEmTempoReal(fornecedor.cpfCnpj, fornecedor.tipo);
-                return validacao.message;
-              })()}
+              error={!!fieldErrors.cpfCnpj}
+              helperText={fieldErrors.cpfCnpj || ''}
               inputProps={{ inputMode: 'numeric' }}
               autoComplete="off"
             />
@@ -981,7 +972,6 @@ const FornecedorForm = () => {
               onChange={handleRgChange}
               variant="outlined"
               placeholder={fornecedor.tipo === 'FISICA' ? 'Ex: 123456789' : 'Ex: 123456789012 ou ISENTO'}
-              helperText={fornecedor.tipo === 'FISICA' ? '' : 'Digite os números ou "ISENTO" se aplicável'}
               inputProps={{ maxLength: fornecedor.tipo === 'FISICA' ? 15 : 20 }}
               autoComplete="off"
             />
@@ -1006,8 +996,8 @@ const FornecedorForm = () => {
                 max: "15000"
               }}
               variant="outlined"
-              error={fornecedor.limiteCredito && parseFloat(fornecedor.limiteCredito) > 15000}
-              helperText={fornecedor.limiteCredito && parseFloat(fornecedor.limiteCredito) > 15000 ? 'Limite máximo: R$ 15.000,00' : 'Máximo: R$ 15.000,00'}
+              error={!!fieldErrors.limiteCredito}
+              helperText={fieldErrors.limiteCredito || ''}
             />
           </Grid>
 
